@@ -1,26 +1,14 @@
 "use client";
 
-import { ThemeToggle } from "@/components/general/theme-toggle";
-import { UserButton } from "@/components/general/user-button";
-import { Button } from "@/components/ui/button";
+import { TimeRegistrationDrawer } from "@/components/dashboard/time-registration-drawer";
+import { Navbar } from "@/components/general/navbar";
+import { useTimeEntriesStore } from "@/components/general/use-time-entries-store";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { getOrCreateProfile } from "@/db/actions/profiles";
 import type { Profile } from "@/db/schemas/profiles";
 import { configFile } from "@/lib/config";
 import { useUser } from "@stackframe/stack";
-import { CalendarIcon, Clock, HandHelping, TrendingUp } from "lucide-react";
+import { CalendarIcon, Clock, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -28,12 +16,34 @@ import { toast } from "sonner";
 export default function DashboardPage() {
   const user = useUser();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [horasNormales, setHorasNormales] = useState("");
-  const [horasNocturnas, setHorasNocturnas] = useState("");
-  const [horasSabado, setHorasSabado] = useState("");
-  const [horasDomingo, setHorasDomingo] = useState("");
   const router = useRouter();
+
+  // Zustand stores
+  const {
+    selectedDate,
+    setSelectedDate,
+    getDayData,
+    addTimeEntry,
+    removeTimeEntry,
+    updateTimeEntry,
+    setDietasCount,
+    setIsPernocta,
+    getMonthlyHours,
+    getMonthlyEarnings,
+  } = useTimeEntriesStore();
+
+  // Get current day data - ensure selectedDate is a valid Date
+  const currentDayData =
+    selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime())
+      ? getDayData(selectedDate)
+      : null;
+
+  // Initialize selectedDate if it's not valid
+  useEffect(() => {
+    if (!selectedDate || !(selectedDate instanceof Date) || isNaN(selectedDate.getTime())) {
+      setSelectedDate(new Date());
+    }
+  }, [selectedDate, setSelectedDate]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -58,23 +68,19 @@ export default function DashboardPage() {
   }, [user, router]);
   if (!user) return null;
 
+  // Get current monthly summary - use current date if selectedDate is invalid
+  const currentDate =
+    selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime())
+      ? selectedDate
+      : new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  const monthlyHours = getMonthlyHours(currentYear, currentMonth);
+  const monthlyEarnings = getMonthlyEarnings(currentYear, currentMonth);
+
   return (
     <div className="bg-background min-h-screen">
-      {/* Header */}
-      <header className="border-b">
-        <div className="flex h-14 items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary text-primary-foreground flex h-6 w-6 items-center justify-center rounded-md text-sm font-bold md:h-8 md:w-8">
-              <HandHelping className="h-4 w-4" />
-            </div>
-            <h1 className="text-lg font-semibold md:text-xl">Facility</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            {profile && <UserButton profile={profile} user={user} />}
-          </div>
-        </div>
-      </header>
+      <Navbar profile={profile} user={user} />
 
       {/* Main Content */}
       <main className="p-4 md:p-6">
@@ -83,117 +89,46 @@ export default function DashboardPage() {
           <div className="space-y-4 md:space-y-6">
             {/* Day Metrics - First */}
             <div className="p-4 lg:col-span-2">
-              {date ? (
+              {selectedDate && currentDayData ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold">
-                        {date.toLocaleDateString("es-ES", {
+                        {selectedDate.toLocaleDateString("es-ES", {
                           weekday: "long",
                           day: "numeric",
                           month: "long",
                         })}
                       </h3>
-                      <p className="text-muted-foreground text-sm">8h trabajadas</p>
+                      <p className="text-muted-foreground text-sm">
+                        {currentDayData.hourBreakdown.total.toFixed(1)}h trabajadas
+                      </p>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold">€124.80</div>
+                      <div className="text-lg font-bold">
+                        €{currentDayData.totalEarnings.toFixed(2)}
+                      </div>
                       <div className="text-muted-foreground text-xs">Sueldo bruto</div>
                     </div>
                   </div>
 
-                  <Drawer>
-                    <DrawerTrigger asChild>
-                      <Button className="w-full">
-                        <Clock className="mr-2 h-4 w-4" />
-                        Registrar Horas
-                      </Button>
-                    </DrawerTrigger>
-                    <DrawerContent>
-                      <DrawerHeader>
-                        <DrawerTitle>Registrar Horas</DrawerTitle>
-                        <DrawerDescription>
-                          {date?.toLocaleDateString("es-ES", {
-                            weekday: "long",
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </DrawerDescription>
-                      </DrawerHeader>
-
-                      <div className="space-y-4 px-4 pb-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="horas-normales">Horas Normales</Label>
-                            <span className="text-muted-foreground text-sm">15.60€ / hora</span>
-                          </div>
-                          <Input
-                            id="horas-normales"
-                            type="number"
-                            placeholder="0"
-                            value={horasNormales}
-                            onChange={(e) => setHorasNormales(e.target.value)}
-                            className="text-base"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="horas-nocturnas">Horas Nocturnas</Label>
-                            <span className="text-muted-foreground text-sm">18.72€ / hora</span>
-                          </div>
-                          <Input
-                            id="horas-nocturnas"
-                            type="number"
-                            placeholder="0"
-                            value={horasNocturnas}
-                            onChange={(e) => setHorasNocturnas(e.target.value)}
-                            className="text-base"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="horas-sabado">Horas Sábado</Label>
-                            <span className="text-muted-foreground text-sm">23.40€ / hora</span>
-                          </div>
-                          <Input
-                            id="horas-sabado"
-                            type="number"
-                            placeholder="0"
-                            value={horasSabado}
-                            onChange={(e) => setHorasSabado(e.target.value)}
-                            className="text-base"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Label htmlFor="horas-domingo">Horas Domingo</Label>
-                            <span className="text-muted-foreground text-sm">31.20€ / hora</span>
-                          </div>
-                          <Input
-                            id="horas-domingo"
-                            type="number"
-                            placeholder="0"
-                            value={horasDomingo}
-                            onChange={(e) => setHorasDomingo(e.target.value)}
-                            className="text-base"
-                          />
-                        </div>
-                      </div>
-
-                      <DrawerFooter>
-                        <Button className="w-full">Guardar Horas</Button>
-                        <DrawerClose asChild>
-                          <Button variant="outline" className="w-full">
-                            Cancelar
-                          </Button>
-                        </DrawerClose>
-                      </DrawerFooter>
-                    </DrawerContent>
-                  </Drawer>
+                  <TimeRegistrationDrawer
+                    date={selectedDate}
+                    timeEntries={currentDayData.timeEntries}
+                    dietasCount={currentDayData.dietasCount}
+                    isPernocta={currentDayData.isPernocta}
+                    hourBreakdown={currentDayData.hourBreakdown}
+                    totalEarnings={currentDayData.totalEarnings}
+                    onAddTimeEntry={() => selectedDate && addTimeEntry(selectedDate)}
+                    onRemoveTimeEntry={(id) => selectedDate && removeTimeEntry(selectedDate, id)}
+                    onUpdateTimeEntry={(id, field, value) =>
+                      selectedDate && updateTimeEntry(selectedDate, id, field, value)
+                    }
+                    onDietasChange={(count) => selectedDate && setDietasCount(selectedDate, count)}
+                    onPernoctaChange={(isPernocta) =>
+                      selectedDate && setIsPernocta(selectedDate, isPernocta)
+                    }
+                  />
                 </div>
               ) : (
                 <div className="text-muted-foreground py-8 text-center">
@@ -210,8 +145,9 @@ export default function DashboardPage() {
               </h2>
               <Calendar
                 mode="single"
-                selected={date}
-                onSelect={setDate}
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                showOutsideDays={false}
                 className="w-full p-0 [--cell-size:theme(spacing.12)] md:[--cell-size:theme(spacing.10)]"
               />
             </div>
@@ -225,20 +161,32 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Horas Normales</span>
-                  <span className="font-medium">160h</span>
+                  <span className="font-medium">{monthlyHours.normal.toFixed(1)}h</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Horas Nocturnas</span>
-                  <span className="font-medium">24h</span>
+                  <span className="font-medium">{monthlyHours.nocturnal.toFixed(1)}h</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horas Festivas</span>
-                  <span className="font-medium">8h</span>
+                  <span className="text-muted-foreground">Horas Sábado</span>
+                  <span className="font-medium">{monthlyHours.saturday.toFixed(1)}h</span>
                 </div>
-                <div className="border-t pt-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Horas Domingo</span>
+                  <span className="font-medium">{monthlyHours.sunday.toFixed(1)}h</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Horas Pernocta</span>
+                  <span className="font-medium">{monthlyHours.pernocta.toFixed(1)}h</span>
+                </div>
+                <div className="space-y-2 border-t pt-3">
                   <div className="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>192h</span>
+                    <span>Total Horas</span>
+                    <span>{monthlyHours.total.toFixed(1)}h</span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-green-600">
+                    <span>Total Ingresos</span>
+                    <span>€{monthlyEarnings.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

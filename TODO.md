@@ -1,5 +1,8 @@
 # CRITICAL
 
+plantea que tipo de schema o schemas habría que crear para guardar toda la info necesaria , algo tipo @db/schemas/profiles.ts, solo
+haz ese y no modifiques mas codigo, solo quiero saber
+
 - Hacer que cada item de la navbar sea un componente, así mas facil de controlar.
 - Crear un TOC dinámico en base a que sección estés
 - Poder ocultar el TOC.
