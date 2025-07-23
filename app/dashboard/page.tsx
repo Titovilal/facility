@@ -1,6 +1,5 @@
 "use client";
 
-import { ProfileDisplay } from "@/components/dashboard/profile-display";
 import { ThemeToggle } from "@/components/general/theme-toggle";
 import { UserButton } from "@/components/general/user-button";
 import { getOrCreateProfile } from "@/db/actions/profiles";
@@ -45,10 +44,6 @@ export default function DashboardPage() {
         <ThemeToggle />
         {profile && <UserButton profile={profile} user={user} />}
       </div>
-
-      {profile && <ProfileDisplay profile={profile} />}
-
-      {/* <TodoList dictionary={dictionary} user={user} profile={profile} /> */}
     </div>
   );
 }

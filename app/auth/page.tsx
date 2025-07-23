@@ -101,66 +101,66 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="bg-muted flex min-h-screen items-center justify-center p-4">
+    <div className="bg-muted flex min-h-screen items-center justify-center p-3 md:p-4">
       <Link
         href={`/`}
-        className="text-primary/80 hover:text-primary absolute top-4 left-4 flex items-center gap-2 text-sm duration-200"
+        className="text-primary/80 hover:text-primary absolute top-3 left-3 flex items-center gap-1.5 text-xs duration-200 md:top-4 md:left-4 md:gap-2 md:text-sm"
       >
-        <ArrowLeft className="h-4 w-4" />
-        <p className="">Back to Home</p>
+        <ArrowLeft className="h-3 w-3 md:h-4 md:w-4" />
+        <p>Volver al Inicio</p>
       </Link>
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-center text-2xl font-bold">
-            Welcome to Terturions Template
-          </CardTitle>
-          <CardDescription className="text-center">Sign in to your account</CardDescription>
+      <Card className="w-full max-w-sm md:max-w-md">
+        <CardHeader className="space-y-1 pb-4 md:pb-6">
+          <CardTitle className="text-center text-xl font-bold md:text-2xl">Bienvenido a Facility</CardTitle>
+          <CardDescription className="text-center text-sm md:text-base">Inicia sesión en tu cuenta</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 md:space-y-4">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
-          <form onSubmit={handleMagicLink} className="space-y-3">
+          <form onSubmit={handleMagicLink} className="space-y-2 md:space-y-3">
             <div className="space-y-2">
               <Input
                 type="email"
-                placeholder="email@example.com"
+                placeholder="email@ejemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading || magicLinkSent}
+                className="h-10 text-sm md:h-11 md:text-base"
               />
               <Button
                 type="submit"
                 variant="outline"
                 disabled={isLoading || magicLinkSent}
-                className="flex w-full items-center justify-center gap-2"
+                className="flex w-full items-center justify-center gap-1.5 h-10 text-sm md:gap-2 md:h-11 md:text-base"
               >
-                <Mail className="h-4 w-4" />
-                Send Magic Link
+                <Mail className="h-3 w-3 md:h-4 md:w-4" />
+                Enviar Enlace Mágico
               </Button>
             </div>
           </form>
 
           {magicLinkSent && (
-            <form onSubmit={handleMagicLinkCode} className="space-y-3">
+            <form onSubmit={handleMagicLinkCode} className="space-y-2 md:space-y-3">
               <div className="space-y-2">
                 <Input
                   type="text"
-                  placeholder="Enter code from email"
+                  placeholder="Ingresa el código del email"
                   value={magicLinkCode}
                   onChange={(e) => setMagicLinkCode(e.target.value)}
                   disabled={isLoading}
+                  className="h-10 text-sm md:h-11 md:text-base"
                 />
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="flex w-full items-center justify-center gap-2"
+                  className="flex w-full items-center justify-center gap-1.5 h-10 text-sm md:gap-2 md:h-11 md:text-base"
                 >
-                  Sign in with code
+                  Iniciar Sesión con Código
                 </Button>
               </div>
             </form>
@@ -171,7 +171,7 @@ export default function AuthPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <Badge>Or continue with</Badge>
+              <Badge className="text-xs px-2 py-1">O continúa con</Badge>
             </div>
           </div>
 
@@ -179,10 +179,10 @@ export default function AuthPage() {
             variant="outline"
             onClick={() => handleOAuth("google")}
             disabled={isLoading}
-            className="flex w-full items-center justify-center gap-2"
+            className="flex w-full items-center justify-center gap-1.5 h-10 text-sm md:gap-2 md:h-11 md:text-base"
           >
             <GoogleIcon />
-            Continue with Google
+            Continuar con Google
           </Button>
         </CardContent>
       </Card>
