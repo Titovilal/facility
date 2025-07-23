@@ -1,0 +1,35 @@
+{
+  "files.exclude": {
+    "**/.git": false,
+    "**/.svn": false,
+    "**/.hg": false,
+    "**/.DS_Store": false,
+    "**/Thumbs.db": false,
+    ".gitignore": false,
+    ".next": false,
+    ".prettierrc": false,
+    ".svn": false,
+    ".vscode": false,
+    "app/handler": false,
+    "bun.lock": false,
+    "components.json": false,
+    "drizzle.config.ts": false,
+    "drizzle": false,
+    "eslint.config.mjs": false,
+    "middleware.ts": false,
+    "next-env.d.ts": false,
+    "next.config.ts": false,
+    "node_modules": false,
+    "postcss.config.mjs": false,
+    "stack.ts": false,
+    "tsconfig.json": false
+  },
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "explorerExclude.backup": {},
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}
