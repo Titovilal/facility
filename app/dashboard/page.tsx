@@ -4,7 +4,16 @@ import { ThemeToggle } from "@/components/general/theme-toggle";
 import { UserButton } from "@/components/general/user-button";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getOrCreateProfile } from "@/db/actions/profiles";
@@ -73,7 +82,7 @@ export default function DashboardPage() {
           {/* Dashboard Content */}
           <div className="space-y-4 md:space-y-6">
             {/* Day Metrics - First */}
-            <div className="lg:col-span-2 p-4">
+            <div className="p-4 lg:col-span-2">
               {date ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -104,18 +113,21 @@ export default function DashboardPage() {
                       <DrawerHeader>
                         <DrawerTitle>Registrar Horas</DrawerTitle>
                         <DrawerDescription>
-                          {date?.toLocaleDateString('es-ES', {
-                            weekday: 'long',
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
+                          {date?.toLocaleDateString("es-ES", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
                           })}
                         </DrawerDescription>
                       </DrawerHeader>
-                      
-                      <div className="px-4 pb-4 space-y-4">
+
+                      <div className="space-y-4 px-4 pb-4">
                         <div className="space-y-2">
-                          <Label htmlFor="horas-normales">Horas Normales</Label>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="horas-normales">Horas Normales</Label>
+                            <span className="text-muted-foreground text-sm">15.60€ / hora</span>
+                          </div>
                           <Input
                             id="horas-normales"
                             type="number"
@@ -125,9 +137,12 @@ export default function DashboardPage() {
                             className="text-base"
                           />
                         </div>
-                        
+
                         <div className="space-y-2">
-                          <Label htmlFor="horas-nocturnas">Horas Nocturnas</Label>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="horas-nocturnas">Horas Nocturnas</Label>
+                            <span className="text-muted-foreground text-sm">18.72€ / hora</span>
+                          </div>
                           <Input
                             id="horas-nocturnas"
                             type="number"
@@ -137,9 +152,12 @@ export default function DashboardPage() {
                             className="text-base"
                           />
                         </div>
-                        
+
                         <div className="space-y-2">
-                          <Label htmlFor="horas-sabado">Horas Sábado</Label>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="horas-sabado">Horas Sábado</Label>
+                            <span className="text-muted-foreground text-sm">23.40€ / hora</span>
+                          </div>
                           <Input
                             id="horas-sabado"
                             type="number"
@@ -149,9 +167,12 @@ export default function DashboardPage() {
                             className="text-base"
                           />
                         </div>
-                        
+
                         <div className="space-y-2">
-                          <Label htmlFor="horas-domingo">Horas Domingo</Label>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="horas-domingo">Horas Domingo</Label>
+                            <span className="text-muted-foreground text-sm">31.20€ / hora</span>
+                          </div>
                           <Input
                             id="horas-domingo"
                             type="number"
@@ -162,11 +183,9 @@ export default function DashboardPage() {
                           />
                         </div>
                       </div>
-                      
+
                       <DrawerFooter>
-                        <Button className="w-full">
-                          Guardar Horas
-                        </Button>
+                        <Button className="w-full">Guardar Horas</Button>
                         <DrawerClose asChild>
                           <Button variant="outline" className="w-full">
                             Cancelar
@@ -185,7 +204,7 @@ export default function DashboardPage() {
             </div>
             {/* Calendar Section */}
             <div className="p-4">
-              <h2 className="flex items-center gap-2 text-lg font-semibold mb-4 md:text-xl">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold md:text-xl">
                 <CalendarIcon className="h-5 w-5" />
                 Calendario de Horas
               </h2>
@@ -199,7 +218,7 @@ export default function DashboardPage() {
 
             {/* Monthly Summary */}
             <div className="p-4">
-              <h2 className="flex items-center gap-2 text-lg font-semibold mb-4">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
                 <TrendingUp className="h-5 w-5" />
                 Resumen del Mes
               </h2>
