@@ -91,27 +91,6 @@ export default function DashboardPage() {
             <div className="p-4 lg:col-span-2">
               {selectedDate && currentDayData ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {selectedDate.toLocaleDateString("es-ES", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                        })}
-                      </h3>
-                      <p className="text-muted-foreground text-sm">
-                        {currentDayData.hourBreakdown.total.toFixed(1)}h trabajadas
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold">
-                        €{currentDayData.totalEarnings.toFixed(2)}
-                      </div>
-                      <div className="text-muted-foreground text-xs">Sueldo bruto</div>
-                    </div>
-                  </div>
-
                   <TimeRegistrationDrawer
                     date={selectedDate}
                     timeEntries={currentDayData.timeEntries}
@@ -128,7 +107,28 @@ export default function DashboardPage() {
                     onPernoctaChange={(isPernocta) =>
                       selectedDate && setIsPernocta(selectedDate, isPernocta)
                     }
-                  />
+                  >
+                    <div className="flex items-center justify-between cursor-pointer hover:bg-accent/50 rounded-lg p-2 transition-colors">
+                      <div>
+                        <h3 className="text-lg font-semibold">
+                          {selectedDate.toLocaleDateString("es-ES", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                          })}
+                        </h3>
+                        <p className="text-muted-foreground text-sm">
+                          {currentDayData.hourBreakdown.total.toFixed(1)}h trabajadas
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold">
+                          €{currentDayData.totalEarnings.toFixed(2)}
+                        </div>
+                        <div className="text-muted-foreground text-xs">Sueldo bruto</div>
+                      </div>
+                    </div>
+                  </TimeRegistrationDrawer>
                 </div>
               ) : (
                 <div className="text-muted-foreground py-8 text-center">
@@ -174,10 +174,6 @@ export default function DashboardPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Horas Domingo</span>
                   <span className="font-medium">{monthlyHours.sunday.toFixed(1)}h</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horas Pernocta</span>
-                  <span className="font-medium">{monthlyHours.pernocta.toFixed(1)}h</span>
                 </div>
                 <div className="space-y-2 border-t pt-3">
                   <div className="flex justify-between font-semibold">

@@ -144,17 +144,26 @@ function CalendarDayButton({
   ...props
 }: React.ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames();
-  const getDayData = useTimeEntriesStore((state) => state.getDayData);
+  
+  // Create a stable selector that only re-renders when the specific day's data changes
+  const dateKey = React.useMemo(() => {
+    return day.date.toISOString().split('T')[0];
+  }, [day.date]);
+
+  const dayData = useTimeEntriesStore(
+    React.useCallback(
+      (state) => state.monthlyData[dateKey],
+      [dateKey]
+    )
+  );
 
   const ref = React.useRef<HTMLButtonElement>(null);
   React.useEffect(() => {
     if (modifiers.focused) ref.current?.focus();
   }, [modifiers.focused]);
 
-  const dayData = getDayData(day.date);
   const dailyEarnings = dayData?.totalEarnings || 0;
   const vacationType = dayData?.vacationType || "none";
-
   const isVacationDay = vacationType !== "none";
 
   return (

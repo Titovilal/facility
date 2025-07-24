@@ -40,6 +40,7 @@ interface TimeRegistrationDrawerProps {
   onUpdateTimeEntry: (id: string, field: "startTime" | "endTime", value: string) => void;
   onDietasChange: (count: number) => void;
   onPernoctaChange: (checked: boolean) => void;
+  children: React.ReactNode;
 }
 
 export function TimeRegistrationDrawer({
@@ -54,6 +55,7 @@ export function TimeRegistrationDrawer({
   onUpdateTimeEntry,
   onDietasChange,
   onPernoctaChange,
+  children,
 }: TimeRegistrationDrawerProps) {
   // Get current rates from config store
   const { pernoctaPrice } = useConfigStore();
@@ -73,10 +75,7 @@ export function TimeRegistrationDrawer({
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button className="w-full">
-          <Clock className="mr-2 h-4 w-4" />
-          Registrar Horas
-        </Button>
+        {children}
       </DrawerTrigger>
 
       <DrawerContent className="fixed right-0 bottom-0 left-0 max-h-[60dvh]">
