@@ -111,8 +111,12 @@ export default function AuthPage() {
       </Link>
       <Card className="w-full max-w-sm md:max-w-md">
         <CardHeader className="space-y-1 pb-4 md:pb-6">
-          <CardTitle className="text-center text-xl font-bold md:text-2xl">Bienvenido a Facility</CardTitle>
-          <CardDescription className="text-center text-sm md:text-base">Inicia sesión en tu cuenta</CardDescription>
+          <CardTitle className="text-center text-xl font-bold md:text-2xl">
+            Bienvenido a Facility
+          </CardTitle>
+          <CardDescription className="text-center text-sm md:text-base">
+            Inicia sesión en tu cuenta
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 md:space-y-4">
           {error && (
@@ -136,7 +140,7 @@ export default function AuthPage() {
                 type="submit"
                 variant="outline"
                 disabled={isLoading || magicLinkSent}
-                className="flex w-full items-center justify-center gap-1.5 h-10 text-sm md:gap-2 md:h-11 md:text-base"
+                className="flex h-10 w-full items-center justify-center gap-1.5 text-sm md:h-11 md:gap-2 md:text-base"
               >
                 <Mail className="h-3 w-3 md:h-4 md:w-4" />
                 Enviar Enlace Mágico
@@ -158,7 +162,7 @@ export default function AuthPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="flex w-full items-center justify-center gap-1.5 h-10 text-sm md:gap-2 md:h-11 md:text-base"
+                  className="flex h-10 w-full items-center justify-center gap-1.5 text-sm md:h-11 md:gap-2 md:text-base"
                 >
                   Iniciar Sesión con Código
                 </Button>
@@ -171,7 +175,7 @@ export default function AuthPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <Badge className="text-xs px-2 py-1">O continúa con</Badge>
+              <Badge className="px-2 py-1 text-xs">O continúa con</Badge>
             </div>
           </div>
 
@@ -179,7 +183,7 @@ export default function AuthPage() {
             variant="outline"
             onClick={() => handleOAuth("google")}
             disabled={isLoading}
-            className="flex w-full items-center justify-center gap-1.5 h-10 text-sm md:gap-2 md:h-11 md:text-base"
+            className="flex h-10 w-full items-center justify-center gap-1.5 text-sm md:h-11 md:gap-2 md:text-base"
           >
             <GoogleIcon />
             Continuar con Google

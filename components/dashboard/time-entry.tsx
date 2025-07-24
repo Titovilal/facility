@@ -23,7 +23,7 @@ interface TimeEntryProps {
 export function TimeEntry({ entry, index, canRemove, onRemove, onUpdate }: TimeEntryProps) {
   const calculateDuration = () => {
     if (!entry.startTime || !entry.endTime) return null;
-    
+
     const start = new Date(`2000-01-01T${entry.startTime}`);
     const end = new Date(`2000-01-01T${entry.endTime}`);
     if (end < start) end.setDate(end.getDate() + 1);
@@ -39,9 +39,7 @@ export function TimeEntry({ entry, index, canRemove, onRemove, onUpdate }: TimeE
       <CardContent className="p-4">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium">
-              Período {index + 1}
-            </Label>
+            <Label className="text-sm font-medium">Período {index + 1}</Label>
             {canRemove && (
               <Button
                 type="button"
@@ -57,10 +55,7 @@ export function TimeEntry({ entry, index, canRemove, onRemove, onUpdate }: TimeE
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label
-                htmlFor={`start-${entry.id}`}
-                className="text-muted-foreground text-xs"
-              >
+              <Label htmlFor={`start-${entry.id}`} className="text-muted-foreground text-xs">
                 Hora Inicio
               </Label>
               <Input
@@ -69,15 +64,12 @@ export function TimeEntry({ entry, index, canRemove, onRemove, onUpdate }: TimeE
                 value={entry.startTime}
                 onChange={(e) => onUpdate(entry.id, "startTime", e.target.value)}
                 className="text-center [&::-webkit-calendar-picker-indicator]:opacity-0"
-                style={{ colorScheme: 'dark' }}
+                style={{ colorScheme: "dark" }}
               />
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor={`end-${entry.id}`}
-                className="text-muted-foreground text-xs"
-              >
+              <Label htmlFor={`end-${entry.id}`} className="text-muted-foreground text-xs">
                 Hora Fin
               </Label>
               <Input
@@ -86,16 +78,12 @@ export function TimeEntry({ entry, index, canRemove, onRemove, onUpdate }: TimeE
                 value={entry.endTime}
                 onChange={(e) => onUpdate(entry.id, "endTime", e.target.value)}
                 className="text-center [&::-webkit-calendar-picker-indicator]:opacity-0"
-                style={{ colorScheme: 'dark' }}
+                style={{ colorScheme: "dark" }}
               />
             </div>
           </div>
 
-          {duration && (
-            <div className="text-muted-foreground text-center text-sm">
-              {duration}h
-            </div>
-          )}
+          {duration && <div className="text-muted-foreground text-center text-sm">{duration}h</div>}
         </div>
       </CardContent>
     </Card>

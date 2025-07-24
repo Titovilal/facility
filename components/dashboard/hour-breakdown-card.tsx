@@ -18,26 +18,24 @@ interface HourBreakdownCardProps {
   totalEarnings: number;
 }
 
-export function HourBreakdownCard({ hourBreakdown, dietasCount, totalEarnings }: HourBreakdownCardProps) {
+export function HourBreakdownCard({
+  hourBreakdown,
+  dietasCount,
+  totalEarnings,
+}: HourBreakdownCardProps) {
   // Get current rates from config store
-  const {
-    normalRate,
-    extraRate,
-    saturdayRate,
-    sundayRate,
-    dietaPrice,
-    pernoctaPrice,
-  } = useConfigStore();
+  const { normalRate, extraRate, saturdayRate, sundayRate, dietaPrice, pernoctaPrice } =
+    useConfigStore();
 
   const rates = {
-    normal: parseFloat(normalRate),
-    saturday: parseFloat(saturdayRate),
-    sunday: parseFloat(sundayRate),
-    pernocta: parseFloat(pernoctaPrice),
-    extra: parseFloat(extraRate),
+    normal: parseFloat(normalRate) || 0,
+    saturday: parseFloat(saturdayRate) || 0,
+    sunday: parseFloat(sundayRate) || 0,
+    pernocta: parseFloat(pernoctaPrice) || 0,
+    extra: parseFloat(extraRate) || 0,
   };
 
-  const dietaPriceNum = parseFloat(dietaPrice);
+  const dietaPriceNum = parseFloat(dietaPrice) || 0;
 
   return (
     <Card className="bg-muted/50">
@@ -45,43 +43,55 @@ export function HourBreakdownCard({ hourBreakdown, dietasCount, totalEarnings }:
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="font-medium">Total de Horas</span>
-            <span className="text-lg font-bold">
-              {hourBreakdown.total.toFixed(1)}h
-            </span>
+            <span className="text-lg font-bold">{hourBreakdown.total.toFixed(1)}h</span>
           </div>
 
           {hourBreakdown.normal > 0 && (
             <div className="text-muted-foreground flex items-center justify-between text-sm">
               <span>Horas Normales (€{rates.normal}/h)</span>
-              <span>{hourBreakdown.normal.toFixed(1)}h - €{(hourBreakdown.normal * rates.normal).toFixed(2)}</span>
+              <span>
+                {hourBreakdown.normal.toFixed(1)}h - €
+                {(hourBreakdown.normal * rates.normal).toFixed(2)}
+              </span>
             </div>
           )}
 
           {hourBreakdown.saturday > 0 && (
             <div className="text-muted-foreground flex items-center justify-between text-sm">
               <span>Horas Sábado (€{rates.saturday}/h)</span>
-              <span>{hourBreakdown.saturday.toFixed(1)}h - €{(hourBreakdown.saturday * rates.saturday).toFixed(2)}</span>
+              <span>
+                {hourBreakdown.saturday.toFixed(1)}h - €
+                {(hourBreakdown.saturday * rates.saturday).toFixed(2)}
+              </span>
             </div>
           )}
 
           {hourBreakdown.sunday > 0 && (
             <div className="text-muted-foreground flex items-center justify-between text-sm">
               <span>Horas Domingo (€{rates.sunday}/h)</span>
-              <span>{hourBreakdown.sunday.toFixed(1)}h - €{(hourBreakdown.sunday * rates.sunday).toFixed(2)}</span>
+              <span>
+                {hourBreakdown.sunday.toFixed(1)}h - €
+                {(hourBreakdown.sunday * rates.sunday).toFixed(2)}
+              </span>
             </div>
           )}
-
 
           {hourBreakdown.extra > 0 && (
             <div className="text-muted-foreground flex items-center justify-between text-sm">
               <span>Horas Extra (€{rates.extra}/h)</span>
-              <span>{hourBreakdown.extra.toFixed(1)}h - €{(hourBreakdown.extra * rates.extra).toFixed(2)}</span>
+              <span>
+                {hourBreakdown.extra.toFixed(1)}h - €
+                {(hourBreakdown.extra * rates.extra).toFixed(2)}
+              </span>
             </div>
           )}
 
           {dietasCount > 0 && (
             <div className="text-muted-foreground flex items-center justify-between text-sm">
-              <span>Dietas ({dietasCount % 1 === 0 ? dietasCount.toFixed(0) : dietasCount.toFixed(1)} x €{dietaPriceNum.toFixed(2)})</span>
+              <span>
+                Dietas ({dietasCount % 1 === 0 ? dietasCount.toFixed(0) : dietasCount.toFixed(1)} x
+                €{dietaPriceNum.toFixed(2)})
+              </span>
               <span>€{(dietasCount * dietaPriceNum).toFixed(2)}</span>
             </div>
           )}

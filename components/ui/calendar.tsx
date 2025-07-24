@@ -144,17 +144,14 @@ function CalendarDayButton({
   ...props
 }: React.ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames();
-  
+
   // Create a stable selector that only re-renders when the specific day's data changes
   const dateKey = React.useMemo(() => {
-    return day.date.toISOString().split('T')[0];
+    return day.date.toISOString().split("T")[0];
   }, [day.date]);
 
   const dayData = useTimeEntriesStore(
-    React.useCallback(
-      (state) => state.monthlyData[dateKey],
-      [dateKey]
-    )
+    React.useCallback((state) => state.monthlyData[dateKey], [dateKey])
   );
 
   const ref = React.useRef<HTMLButtonElement>(null);

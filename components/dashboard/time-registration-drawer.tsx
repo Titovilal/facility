@@ -1,17 +1,23 @@
 "use client";
 
+import { useConfigStore } from "@/components/general/use-config-store";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { Drawer, DrawerClose, DrawerContent, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, Plus } from "lucide-react";
-import { TimeEntry } from "./time-entry";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { DietasCounter } from "./dietas-counter";
 import { HourBreakdownCard } from "./hour-breakdown-card";
-import { toast } from "sonner";
-import { useConfigStore } from "@/components/general/use-config-store";
+import { TimeEntry } from "./time-entry";
 
 type TimeEntryType = {
   id: string;
@@ -62,21 +68,19 @@ export function TimeRegistrationDrawer({
 
   const handleSave = () => {
     // Validate that at least one time entry has both start and end times
-    const hasValidEntry = timeEntries.some(entry => entry.startTime && entry.endTime);
-    
+    const hasValidEntry = timeEntries.some((entry) => entry.startTime && entry.endTime);
+
     if (!hasValidEntry) {
       toast.error("Por favor, completa al menos un período de trabajo");
       return;
     }
-    
+
     toast.success("Horas guardadas correctamente");
     // The data is already being saved to the store through the onChange handlers
   };
   return (
     <Drawer>
-      <DrawerTrigger asChild>
-        {children}
-      </DrawerTrigger>
+      <DrawerTrigger asChild>{children}</DrawerTrigger>
 
       <DrawerContent className="fixed right-0 bottom-0 left-0 max-h-[60dvh]">
         <DrawerTitle className="sr-only">Registrar Horas</DrawerTitle>
@@ -107,12 +111,7 @@ export function TimeRegistrationDrawer({
             ))}
 
             {/* Add Time Entry Button */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onAddTimeEntry}
-              className="w-full"
-            >
+            <Button type="button" variant="outline" onClick={onAddTimeEntry} className="w-full">
               <Plus className="mr-2 h-4 w-4" />
               Agregar Período
             </Button>
@@ -124,20 +123,20 @@ export function TimeRegistrationDrawer({
             <Card className="p-0">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="pernocta" 
+                  <Checkbox
+                    id="pernocta"
                     checked={isPernocta}
                     onCheckedChange={(checked) => onPernoctaChange(checked === true)}
                   />
                   <Label htmlFor="pernocta" className="text-sm font-medium">
-                    Pernocta (€{parseFloat(pernoctaPrice).toFixed(2)}/h)
+                    Pernocta (€{(parseFloat(pernoctaPrice) || 0).toFixed(2)}/h)
                   </Label>
                 </div>
               </CardContent>
             </Card>
 
             {/* Hour Breakdown Card */}
-            <HourBreakdownCard 
+            <HourBreakdownCard
               hourBreakdown={hourBreakdown}
               dietasCount={dietasCount}
               totalEarnings={totalEarnings}

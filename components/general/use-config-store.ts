@@ -1,30 +1,30 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface ConfigState {
   // Salario Base
   annualSalary: string;
   monthlyNet: string;
   paymentType: string;
-  
+
   // Tarifas por Hora
   normalRate: string;
   extraRate: string;
   saturdayRate: string;
   sundayRate: string;
-  
+
   // Límite de horas
   dailyHourLimit: string;
-  
+
   // Dietas y Pernocta
   hasDieta: boolean;
   dietaPrice: string;
   hasPernocta: boolean;
   pernoctaPrice: string;
-  
+
   // Vacaciones
   maxVacationDays: string;
-  
+
   // Actions
   setAnnualSalary: (value: string) => void;
   setMonthlyNet: (value: string) => void;
@@ -39,7 +39,7 @@ interface ConfigState {
   setHasPernocta: (value: boolean) => void;
   setPernoctaPrice: (value: string) => void;
   setMaxVacationDays: (value: string) => void;
-  
+
   // Computed values
   getGovernmentTake: () => {
     annualNet: number;
@@ -65,7 +65,7 @@ export const useConfigStore = create<ConfigState>()(
       hasPernocta: true,
       pernoctaPrice: "25.00",
       maxVacationDays: "22",
-      
+
       // Actions
       setAnnualSalary: (value) => set({ annualSalary: value }),
       setMonthlyNet: (value) => set({ monthlyNet: value }),
@@ -80,7 +80,7 @@ export const useConfigStore = create<ConfigState>()(
       setHasPernocta: (value) => set({ hasPernocta: value }),
       setPernoctaPrice: (value) => set({ pernoctaPrice: value }),
       setMaxVacationDays: (value) => set({ maxVacationDays: value }),
-      
+
       // Computed function
       getGovernmentTake: () => {
         const state = get();
@@ -90,7 +90,7 @@ export const useConfigStore = create<ConfigState>()(
         const annualNet = monthlyNetAmount * pagas;
         const governmentTake = annualGross - annualNet;
         const governmentPercentage = annualGross > 0 ? (governmentTake / annualGross) * 100 : 0;
-        
+
         return {
           annualNet,
           governmentTake,
@@ -99,7 +99,7 @@ export const useConfigStore = create<ConfigState>()(
       },
     }),
     {
-      name: 'facility-config-storage',
+      name: "facility-config-storage",
     }
   )
 );

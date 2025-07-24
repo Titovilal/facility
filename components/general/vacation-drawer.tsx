@@ -36,7 +36,7 @@ function VacationForm() {
   });
   const [vacationType, setVacationTypeLocal] = useState<VacationType>("full_day");
   const [selectionMode, setSelectionMode] = useState<"single" | "range">("single");
-  
+
   const currentYear = new Date().getFullYear();
   const vacationStats = getYearlyVacationStats(currentYear);
   const maxDays = parseFloat(maxVacationDays) || 22;
@@ -49,22 +49,22 @@ function VacationForm() {
     } else if (selectionMode === "range" && dateRange.from) {
       const startDate = dateRange.from;
       const endDate = dateRange.to || dateRange.from;
-      
+
       const currentDate = new Date(startDate);
       let daysApplied = 0;
-      
+
       while (currentDate <= endDate) {
         setVacationType(new Date(currentDate), vacationType);
         currentDate.setDate(currentDate.getDate() + 1);
         daysApplied++;
       }
-      
+
       toast.success(`Vacaciones aplicadas a ${daysApplied} día(s)`);
     } else {
       toast.error("Selecciona una fecha o rango de fechas");
       return;
     }
-    
+
     // Reset selections
     setSelectedDate(new Date());
     setDateRange({ from: undefined, to: undefined });
@@ -77,16 +77,16 @@ function VacationForm() {
     } else if (selectionMode === "range" && dateRange.from) {
       const startDate = dateRange.from;
       const endDate = dateRange.to || dateRange.from;
-      
+
       const currentDate = new Date(startDate);
       let daysCleared = 0;
-      
+
       while (currentDate <= endDate) {
         setVacationType(new Date(currentDate), "none");
         currentDate.setDate(currentDate.getDate() + 1);
         daysCleared++;
       }
-      
+
       toast.success(`Vacaciones eliminadas de ${daysCleared} día(s)`);
     } else {
       toast.error("Selecciona una fecha o rango de fechas");
@@ -98,11 +98,11 @@ function VacationForm() {
       {/* Resumen de Vacaciones */}
       <Card className="py-0">
         <CardContent className="space-y-3 p-4">
-          <h3 className="text-sm font-medium flex items-center gap-2">
+          <h3 className="flex items-center gap-2 text-sm font-medium">
             <Info className="h-4 w-4" />
             Resumen {currentYear}
           </h3>
-          
+
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Días completos</span>
@@ -112,20 +112,22 @@ function VacationForm() {
               <span className="text-muted-foreground">Medios días</span>
               <span className="font-medium">{vacationStats.halfDays}</span>
             </div>
-            <div className="flex justify-between text-sm border-t pt-2">
+            <div className="flex justify-between border-t pt-2 text-sm">
               <span className="text-muted-foreground">Total utilizado</span>
               <span className="font-medium">{vacationStats.totalVacationDays}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Días disponibles</span>
-              <span className={`font-medium ${remainingDays < 0 ? 'text-red-600' : 'text-green-600'}`}>
+              <span
+                className={`font-medium ${remainingDays < 0 ? "text-red-600" : "text-green-600"}`}
+              >
                 {remainingDays}
               </span>
             </div>
           </div>
-          
+
           {remainingDays < 0 && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-2 text-sm text-red-700 dark:text-red-400">
+            <div className="rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
               ⚠️ Has excedido el límite de días de vacaciones
             </div>
           )}
@@ -136,13 +138,11 @@ function VacationForm() {
       <Card className="py-0">
         <CardContent className="space-y-3 p-4">
           <h3 className="text-sm font-medium">Modo de Selección</h3>
-          
+
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs">
-              Seleccionar fechas
-            </Label>
-            <Select 
-              value={selectionMode} 
+            <Label className="text-muted-foreground text-xs">Seleccionar fechas</Label>
+            <Select
+              value={selectionMode}
               onValueChange={(value: "single" | "range") => {
                 setSelectionMode(value);
                 setSelectedDate(new Date());
@@ -165,13 +165,11 @@ function VacationForm() {
       <Card className="py-0">
         <CardContent className="space-y-3 p-4">
           <h3 className="text-sm font-medium">Tipo de Vacaciones</h3>
-          
+
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs">
-              Duración
-            </Label>
-            <Select 
-              value={vacationType} 
+            <Label className="text-muted-foreground text-xs">Duración</Label>
+            <Select
+              value={vacationType}
               onValueChange={(value: VacationType) => setVacationTypeLocal(value)}
             >
               <SelectTrigger>
@@ -192,7 +190,7 @@ function VacationForm() {
           <h3 className="text-sm font-medium">
             {selectionMode === "single" ? "Seleccionar Día" : "Seleccionar Rango"}
           </h3>
-          
+
           {selectionMode === "single" ? (
             <Calendar
               mode="single"
@@ -210,7 +208,7 @@ function VacationForm() {
               className="w-full"
             />
           )}
-          
+
           {/* Información de selección */}
           <div className="bg-muted rounded-md p-3 text-sm">
             {selectionMode === "single" && selectedDate && (
@@ -225,7 +223,7 @@ function VacationForm() {
                 </span>
               </div>
             )}
-            
+
             {selectionMode === "range" && (
               <div className="space-y-1">
                 {dateRange.from && (
@@ -239,16 +237,16 @@ function VacationForm() {
                 {dateRange.to && (
                   <div>
                     <span className="text-muted-foreground">Hasta: </span>
-                    <span className="font-medium">
-                      {dateRange.to.toLocaleDateString("es-ES")}
-                    </span>
+                    <span className="font-medium">{dateRange.to.toLocaleDateString("es-ES")}</span>
                   </div>
                 )}
                 {dateRange.from && dateRange.to && (
                   <div>
                     <span className="text-muted-foreground">Total días: </span>
                     <span className="font-medium">
-                      {Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1}
+                      {Math.ceil(
+                        (dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)
+                      ) + 1}
                     </span>
                   </div>
                 )}
@@ -260,22 +258,22 @@ function VacationForm() {
 
       {/* Acciones */}
       <div className="flex flex-col gap-2">
-        <Button 
-          onClick={handleApplyVacation} 
+        <Button
+          onClick={handleApplyVacation}
           className="w-full"
           disabled={
-            (selectionMode === "single" && !selectedDate) || 
+            (selectionMode === "single" && !selectedDate) ||
             (selectionMode === "range" && !dateRange.from)
           }
         >
           Aplicar Vacaciones
         </Button>
-        <Button 
-          onClick={handleClearVacation} 
-          variant="outline" 
+        <Button
+          onClick={handleClearVacation}
+          variant="outline"
           className="w-full"
           disabled={
-            (selectionMode === "single" && !selectedDate) || 
+            (selectionMode === "single" && !selectedDate) ||
             (selectionMode === "range" && !dateRange.from)
           }
         >

@@ -120,9 +120,6 @@ export default function DashboardPage() {
                         <p className="text-muted-foreground text-sm">
                           {currentDayData.hourBreakdown.total.toFixed(1)}h trabajadas
                         </p>
-                        <p className="text-muted-foreground mt-1 text-xs opacity-70">
-                          Toca para registrar horas
-                        </p>
                       </div>
                       <div className="flex items-center gap-2 text-right">
                         <div>
@@ -159,7 +156,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Monthly Summary */}
-            <div className="p-4">
+            <div className="p-4 pt-0">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
                 <TrendingUp className="h-5 w-5" />
                 Resumen del Mes

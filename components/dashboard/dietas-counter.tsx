@@ -13,7 +13,7 @@ interface DietasCounterProps {
 
 export function DietasCounter({ count, onChange }: DietasCounterProps) {
   const { dietaPrice } = useConfigStore();
-  
+
   const handleDecrement = () => {
     onChange(Math.max(0, count - 0.5));
   };
@@ -28,7 +28,9 @@ export function DietasCounter({ count, onChange }: DietasCounterProps) {
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Utensils className="text-muted-foreground h-4 w-4" />
-            <Label className="text-sm font-medium">Dietas (€{parseFloat(dietaPrice).toFixed(2)} c/u)</Label>
+            <Label className="text-sm font-medium">
+              Dietas (€{parseFloat(dietaPrice).toFixed(2)} c/u)
+            </Label>
           </div>
 
           <div className="flex items-center gap-2">
@@ -44,9 +46,7 @@ export function DietasCounter({ count, onChange }: DietasCounterProps) {
               <div className="text-2xl font-bold">
                 {count % 1 === 0 ? count.toFixed(0) : count.toFixed(1)}
               </div>
-              <div className="text-muted-foreground text-xs">
-                Dietas del día
-              </div>
+              <div className="text-muted-foreground text-xs">Dietas del día</div>
             </div>
             <Button
               type="button"
