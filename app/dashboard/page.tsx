@@ -8,7 +8,7 @@ import { getOrCreateProfile } from "@/db/actions/profiles";
 import type { Profile } from "@/db/schemas/profiles";
 import { configFile } from "@/lib/config";
 import { useUser } from "@stackframe/stack";
-import { CalendarIcon, Clock, TrendingUp } from "lucide-react";
+import { CalendarIcon, ChevronRight, Clock, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -88,7 +88,7 @@ export default function DashboardPage() {
           {/* Dashboard Content */}
           <div className="space-y-4 md:space-y-6">
             {/* Day Metrics - First */}
-            <div className="p-4 lg:col-span-2">
+            <div className="lg:col-span-2">
               {selectedDate && currentDayData ? (
                 <div className="space-y-4">
                   <TimeRegistrationDrawer
@@ -108,8 +108,8 @@ export default function DashboardPage() {
                       selectedDate && setIsPernocta(selectedDate, isPernocta)
                     }
                   >
-                    <div className="flex items-center justify-between cursor-pointer hover:bg-accent/50 rounded-lg p-2 transition-colors">
-                      <div>
+                    <div className="hover:bg-accent/50 active:bg-accent group border-border/50 bg-card flex cursor-pointer items-center justify-between rounded-lg border p-4 shadow-sm transition-all hover:shadow-md">
+                      <div className="flex-1">
                         <h3 className="text-lg font-semibold">
                           {selectedDate.toLocaleDateString("es-ES", {
                             weekday: "long",
@@ -120,12 +120,18 @@ export default function DashboardPage() {
                         <p className="text-muted-foreground text-sm">
                           {currentDayData.hourBreakdown.total.toFixed(1)}h trabajadas
                         </p>
+                        <p className="text-muted-foreground mt-1 text-xs opacity-70">
+                          Toca para registrar horas
+                        </p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold">
-                          €{currentDayData.totalEarnings.toFixed(2)}
+                      <div className="flex items-center gap-2 text-right">
+                        <div>
+                          <div className="text-lg font-bold">
+                            €{currentDayData.totalEarnings.toFixed(2)}
+                          </div>
+                          <div className="text-muted-foreground text-xs">Sueldo bruto</div>
                         </div>
-                        <div className="text-muted-foreground text-xs">Sueldo bruto</div>
+                        <ChevronRight className="text-muted-foreground/50 group-hover:text-muted-foreground h-5 w-5 transition-colors" />
                       </div>
                     </div>
                   </TimeRegistrationDrawer>
