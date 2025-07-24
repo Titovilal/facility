@@ -71,12 +71,6 @@ export function HourBreakdownCard({ hourBreakdown, dietasCount, totalEarnings }:
             </div>
           )}
 
-          {hourBreakdown.pernocta > 0 && (
-            <div className="text-muted-foreground flex items-center justify-between text-sm">
-              <span>Horas Pernocta (€{rates.pernocta}/h)</span>
-              <span>{hourBreakdown.pernocta.toFixed(1)}h - €{(hourBreakdown.pernocta * rates.pernocta).toFixed(2)}</span>
-            </div>
-          )}
 
           {hourBreakdown.extra > 0 && (
             <div className="text-muted-foreground flex items-center justify-between text-sm">
