@@ -7,12 +7,14 @@ export type TimeEntry = {
   endTime: string;
 };
 
+export type VacationType = 'none' | 'full_day' | 'half_day';
+
 export type HourBreakdown = {
   normal: number;
   saturday: number;
   sunday: number;
   pernocta: number;
-  nocturnal: number;
+  extra: number;
   total: number;
 };
 
@@ -21,6 +23,7 @@ export type DayData = {
   timeEntries: TimeEntry[];
   dietasCount: number;
   isPernocta: boolean;
+  vacationType: VacationType;
   hourBreakdown: HourBreakdown;
   totalEarnings: number;
 };
@@ -50,6 +53,9 @@ interface TimeEntriesState {
   setDietasCount: (date: Date, count: number) => void;
   setIsPernocta: (date: Date, isPernocta: boolean) => void;
   
+  // Actions for vacation
+  setVacationType: (date: Date, vacationType: VacationType) => void;
+  
   // Actions for calculations
   calculateHourBreakdown: (date: Date, timeEntries: TimeEntry[], isPernocta: boolean) => HourBreakdown;
   calculateEarnings: (hourBreakdown: HourBreakdown, dietasCount: number, rates?: {
@@ -57,7 +63,7 @@ interface TimeEntriesState {
     saturday: number;
     sunday: number;
     pernocta: number;
-    nocturnal: number;
+    extra: number;
     dieta: number;
   }) => number;
   updateDayCalculations: (date: Date) => void;
@@ -66,6 +72,14 @@ interface TimeEntriesState {
   getMonthlyHours: (year: number, month: number) => HourBreakdown;
   getMonthlyEarnings: (year: number, month: number) => number;
   getMonthlyDays: (year: number, month: number) => DayData[];
+  
+  // Vacation functions
+  getYearlyVacationStats: (year: number) => {
+    fullDays: number;
+    halfDays: number;
+    totalVacationDays: number;
+    vacationDays: DayData[];
+  };
   
   // Utility functions
   clearDayData: (date: Date) => void;
@@ -98,12 +112,13 @@ const defaultDayData = (date: Date): DayData => ({
   }],
   dietasCount: 0,
   isPernocta: false,
+  vacationType: 'none',
   hourBreakdown: {
     normal: 0,
     saturday: 0,
     sunday: 0,
     pernocta: 0,
-    nocturnal: 0,
+    extra: 0,
     total: 0,
   },
   totalEarnings: 0,
@@ -191,18 +206,67 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         get().updateDayCalculations(date);
       },
       
+      setVacationType: (date, vacationType) => {
+        const dateKey = formatDateKey(date);
+        set((state) => ({
+          monthlyData: {
+            ...state.monthlyData,
+            [dateKey]: {
+              ...state.getDayData(date),
+              vacationType,
+            },
+          },
+        }));
+        get().updateDayCalculations(date);
+      },
+      
       calculateHourBreakdown: (date, timeEntries, isPernocta) => {
+        const dayData = get().getDayData(date);
+        const vacationType = dayData.vacationType;
+        
         const breakdown: HourBreakdown = {
           normal: 0,
           saturday: 0,
           sunday: 0,
           pernocta: 0,
-          nocturnal: 0,
+          extra: 0,
           total: 0,
         };
         
+        // Handle vacation days
+        if (vacationType === 'full_day') {
+          const dayOfWeek = date.getDay();
+          const vacationHours = 8;
+          
+          if (dayOfWeek === 0) { // Sunday
+            breakdown.sunday = vacationHours;
+          } else if (dayOfWeek === 6) { // Saturday
+            breakdown.saturday = vacationHours;
+          } else { // Normal weekday
+            breakdown.normal = vacationHours;
+          }
+          
+          breakdown.total = vacationHours;
+          return breakdown;
+        }
+        
+        if (vacationType === 'half_day') {
+          const dayOfWeek = date.getDay();
+          const vacationHours = 4;
+          
+          if (dayOfWeek === 0) { // Sunday
+            breakdown.sunday = vacationHours;
+          } else if (dayOfWeek === 6) { // Saturday
+            breakdown.saturday = vacationHours;
+          } else { // Normal weekday
+            breakdown.normal = vacationHours;
+          }
+          
+          breakdown.total = vacationHours;
+        }
+        
         const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-        let totalHours = 0;
+        let totalHours = vacationType === 'half_day' ? 4 : 0;
         
         timeEntries.forEach((entry) => {
           if (entry.startTime && entry.endTime) {
@@ -241,7 +305,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           const excessHours = totalHours - 8;
           const hoursToMove = Math.min(breakdown.normal, excessHours);
           breakdown.normal -= hoursToMove;
-          breakdown.nocturnal += hoursToMove;
+          breakdown.extra += hoursToMove;
         }
         
         breakdown.total = totalHours;
@@ -254,7 +318,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           saturday: 23.40,
           sunday: 31.20,
           pernocta: 23.40,
-          nocturnal: 23.40,
+          extra: 23.40,
           dieta: 5.00,
         };
         
@@ -265,7 +329,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           (hourBreakdown.saturday * finalRates.saturday) +
           (hourBreakdown.sunday * finalRates.sunday) +
           (hourBreakdown.pernocta * finalRates.pernocta) +
-          (hourBreakdown.nocturnal * finalRates.nocturnal) +
+          (hourBreakdown.extra * finalRates.extra) +
           (dietasCount * finalRates.dieta);
         
         return earnings;
@@ -296,7 +360,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           saturday: 0,
           sunday: 0,
           pernocta: 0,
-          nocturnal: 0,
+          extra: 0,
           total: 0,
         };
         
@@ -332,6 +396,25 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           const dayDate = new Date(dayData.date);
           return dayDate.getFullYear() === year && dayDate.getMonth() === month;
         });
+      },
+      
+      getYearlyVacationStats: (year) => {
+        const { monthlyData } = get();
+        const vacationDays = Object.values(monthlyData).filter((dayData) => {
+          const dayDate = new Date(dayData.date);
+          return dayDate.getFullYear() === year && dayData.vacationType !== 'none';
+        });
+        
+        const fullDays = vacationDays.filter(day => day.vacationType === 'full_day').length;
+        const halfDays = vacationDays.filter(day => day.vacationType === 'half_day').length;
+        const totalVacationDays = fullDays + (halfDays * 0.5);
+        
+        return {
+          fullDays,
+          halfDays,
+          totalVacationDays,
+          vacationDays: vacationDays.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+        };
       },
       
       clearDayData: (date) => {

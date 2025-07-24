@@ -1,6 +1,7 @@
 "use client";
 
 import { ConfigurationDrawer } from "@/components/general/configuration-drawer";
+import { VacationDrawer } from "@/components/general/vacation-drawer";
 import { ThemeToggle } from "@/components/general/theme-toggle";
 import { UserButton } from "@/components/general/user-button";
 import { StackUser } from "@/db/db";
@@ -23,6 +24,7 @@ export function Navbar({ profile, user }: NavbarProps) {
           <h1 className="text-lg font-semibold md:text-xl">Facility</h1>
         </div>
         <div className="flex items-center gap-2">
+          <VacationDrawer />
           <ConfigurationDrawer />
           <ThemeToggle />
           {profile && <UserButton profile={profile} user={user} />}

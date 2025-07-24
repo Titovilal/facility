@@ -38,6 +38,7 @@ function ConfigurationForm() {
     dailyHourLimit,
     hasDieta,
     hasPernocta,
+    maxVacationDays,
     setAnnualSalary,
     setMonthlyNet,
     setNormalRate,
@@ -50,6 +51,7 @@ function ConfigurationForm() {
     setDailyHourLimit,
     setHasDieta,
     setHasPernocta,
+    setMaxVacationDays,
     getGovernmentTake,
   } = useConfigStore();
 
@@ -258,6 +260,20 @@ function ConfigurationForm() {
                 <SelectItem value="14">14 Pagas</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="max-vacation-days" className="text-muted-foreground text-xs">
+              Días máximos de vacaciones al año
+            </Label>
+            <Input
+              id="max-vacation-days"
+              type="number"
+              min="1"
+              value={maxVacationDays}
+              onChange={(e) => setMaxVacationDays(e.target.value)}
+              className="text-center"
+            />
           </div>
         </CardContent>
       </Card>

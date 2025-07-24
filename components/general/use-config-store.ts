@@ -22,6 +22,9 @@ interface ConfigState {
   hasPernocta: boolean;
   pernoctaPrice: string;
   
+  // Vacaciones
+  maxVacationDays: string;
+  
   // Actions
   setAnnualSalary: (value: string) => void;
   setMonthlyNet: (value: string) => void;
@@ -35,6 +38,7 @@ interface ConfigState {
   setDietaPrice: (value: string) => void;
   setHasPernocta: (value: boolean) => void;
   setPernoctaPrice: (value: string) => void;
+  setMaxVacationDays: (value: string) => void;
   
   // Computed values
   getGovernmentTake: () => {
@@ -60,6 +64,7 @@ export const useConfigStore = create<ConfigState>()(
       dietaPrice: "5.00",
       hasPernocta: true,
       pernoctaPrice: "25.00",
+      maxVacationDays: "22",
       
       // Actions
       setAnnualSalary: (value) => set({ annualSalary: value }),
@@ -74,6 +79,7 @@ export const useConfigStore = create<ConfigState>()(
       setDietaPrice: (value) => set({ dietaPrice: value }),
       setHasPernocta: (value) => set({ hasPernocta: value }),
       setPernoctaPrice: (value) => set({ pernoctaPrice: value }),
+      setMaxVacationDays: (value) => set({ maxVacationDays: value }),
       
       // Computed function
       getGovernmentTake: () => {

@@ -8,7 +8,7 @@ type HourBreakdown = {
   saturday: number;
   sunday: number;
   pernocta: number;
-  nocturnal: number;
+  extra: number;
   total: number;
 };
 
@@ -34,7 +34,7 @@ export function HourBreakdownCard({ hourBreakdown, dietasCount, totalEarnings }:
     saturday: parseFloat(saturdayRate),
     sunday: parseFloat(sundayRate),
     pernocta: parseFloat(pernoctaPrice),
-    nocturnal: parseFloat(extraRate),
+    extra: parseFloat(extraRate),
   };
 
   const dietaPriceNum = parseFloat(dietaPrice);
@@ -78,17 +78,19 @@ export function HourBreakdownCard({ hourBreakdown, dietasCount, totalEarnings }:
             </div>
           )}
 
-          {hourBreakdown.nocturnal > 0 && (
+          {hourBreakdown.extra > 0 && (
             <div className="text-muted-foreground flex items-center justify-between text-sm">
-              <span>Horas Nocturnas (€{rates.nocturnal}/h)</span>
-              <span>{hourBreakdown.nocturnal.toFixed(1)}h - €{(hourBreakdown.nocturnal * rates.nocturnal).toFixed(2)}</span>
+              <span>Horas Extra (€{rates.extra}/h)</span>
+              <span>{hourBreakdown.extra.toFixed(1)}h - €{(hourBreakdown.extra * rates.extra).toFixed(2)}</span>
             </div>
           )}
 
-          <div className="text-muted-foreground flex items-center justify-between text-sm">
-            <span>Dietas ({dietasCount % 1 === 0 ? dietasCount.toFixed(0) : dietasCount.toFixed(1)} x €{dietaPriceNum.toFixed(2)})</span>
-            <span>€{(dietasCount * dietaPriceNum).toFixed(2)}</span>
-          </div>
+          {dietasCount > 0 && (
+            <div className="text-muted-foreground flex items-center justify-between text-sm">
+              <span>Dietas ({dietasCount % 1 === 0 ? dietasCount.toFixed(0) : dietasCount.toFixed(1)} x €{dietaPriceNum.toFixed(2)})</span>
+              <span>€{(dietasCount * dietaPriceNum).toFixed(2)}</span>
+            </div>
+          )}
 
           <div className="flex items-center justify-between border-t pt-2 font-semibold">
             <span>Total del Día</span>

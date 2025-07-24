@@ -164,8 +164,8 @@ export default function DashboardPage() {
                   <span className="font-medium">{monthlyHours.normal.toFixed(1)}h</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horas Nocturnas</span>
-                  <span className="font-medium">{monthlyHours.nocturnal.toFixed(1)}h</span>
+                  <span className="text-muted-foreground">Horas Extra</span>
+                  <span className="font-medium">{monthlyHours.extra.toFixed(1)}h</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Horas Sábado</span>

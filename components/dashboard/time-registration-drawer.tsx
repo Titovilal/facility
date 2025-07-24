@@ -24,7 +24,7 @@ type HourBreakdown = {
   saturday: number;
   sunday: number;
   pernocta: number;
-  nocturnal: number;
+  extra: number;
   total: number;
 };
 
