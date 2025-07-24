@@ -10,6 +10,7 @@ import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { useTimeEntriesStore } from "@/components/general/use-time-entries-store"
 
 function Calendar({
   className,
@@ -179,11 +180,15 @@ function CalendarDayButton({
   ...props
 }: React.ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames()
+  const getDayData = useTimeEntriesStore((state) => state.getDayData)
 
   const ref = React.useRef<HTMLButtonElement>(null)
   React.useEffect(() => {
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
+
+  const dayData = getDayData(day.date)
+  const dailyEarnings = dayData?.totalEarnings || 0
 
   return (
     <Button
@@ -206,7 +211,14 @@ function CalendarDayButton({
         className
       )}
       {...props}
-    />
+    >
+      <span className="text-sm font-bold">{day.date.getDate()}</span>
+      {dailyEarnings > 0 && (
+        <span className="text-xs opacity-70 font-normal text-green-600">
+          €{dailyEarnings.toFixed(0)}
+        </span>
+      )}
+    </Button>
   )
 }
 
