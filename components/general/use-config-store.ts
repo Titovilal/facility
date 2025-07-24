@@ -1,5 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useUser } from "@stackframe/stack";
+import { updateUserConfigFields, getOrCreateUserConfig } from "@/db/actions/config";
+import React from "react";
 
 interface ConfigState {
   // Salario Base
@@ -25,6 +28,10 @@ interface ConfigState {
   // Vacaciones
   maxVacationDays: string;
 
+  // Loading state
+  isLoading: boolean;
+  isInitialized: boolean;
+
   // Actions
   setAnnualSalary: (value: string) => void;
   setMonthlyNet: (value: string) => void;
@@ -40,6 +47,10 @@ interface ConfigState {
   setPernoctaPrice: (value: string) => void;
   setMaxVacationDays: (value: string) => void;
 
+  // Database sync actions
+  initializeFromDatabase: (user: any) => Promise<void>;
+  syncToDatabase: (user: any, field: string, value: string | boolean) => Promise<void>;
+
   // Computed values
   getGovernmentTake: () => {
     annualNet: number;
@@ -48,12 +59,32 @@ interface ConfigState {
   };
 }
 
+const createSetterWithSync = (field: string) => {
+  return (value: string | boolean) => {
+    const { set, get } = useConfigStore.getState();
+    set({ [field]: value });
+    
+    // Async sync to database (fire and forget)
+    const syncToDb = async () => {
+      const user = typeof window !== 'undefined' ? (window as any).currentUser : null;
+      if (user) {
+        try {
+          await get().syncToDatabase(user, field, value);
+        } catch (error) {
+          console.error(`Failed to sync ${field} to database:`, error);
+        }
+      }
+    };
+    syncToDb();
+  };
+};
+
 export const useConfigStore = create<ConfigState>()(
   persist(
     (set, get) => ({
       // Initial values
       annualSalary: "25000",
-      monthlyNet: "1800",
+      monthlyNet: "1700",
       paymentType: "14",
       normalRate: "15.60",
       extraRate: "23.40",
@@ -65,6 +96,8 @@ export const useConfigStore = create<ConfigState>()(
       hasPernocta: true,
       pernoctaPrice: "25.00",
       maxVacationDays: "22",
+      isLoading: false,
+      isInitialized: false,
 
       // Actions
       setAnnualSalary: (value) => set({ annualSalary: value }),
@@ -80,6 +113,46 @@ export const useConfigStore = create<ConfigState>()(
       setHasPernocta: (value) => set({ hasPernocta: value }),
       setPernoctaPrice: (value) => set({ pernoctaPrice: value }),
       setMaxVacationDays: (value) => set({ maxVacationDays: value }),
+
+      // Database sync actions
+      initializeFromDatabase: async (user) => {
+        if (!user || get().isInitialized) return;
+        
+        set({ isLoading: true });
+        try {
+          const config = await getOrCreateUserConfig(user);
+          set({
+            annualSalary: config.annualSalary,
+            monthlyNet: config.monthlyNet,
+            paymentType: config.paymentType,
+            normalRate: config.normalRate,
+            extraRate: config.extraRate,
+            saturdayRate: config.saturdayRate,
+            sundayRate: config.sundayRate,
+            dailyHourLimit: config.dailyHourLimit,
+            hasDieta: config.hasDieta,
+            dietaPrice: config.dietaPrice,
+            hasPernocta: config.hasPernocta,
+            pernoctaPrice: config.pernoctaPrice,
+            maxVacationDays: config.maxVacationDays,
+            isInitialized: true,
+          });
+        } catch (error) {
+          console.error('Failed to initialize config from database:', error);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      syncToDatabase: async (user, field, value) => {
+        if (!user) return;
+        
+        try {
+          await updateUserConfigFields(user, { [field]: value });
+        } catch (error) {
+          console.error(`Failed to sync ${field} to database:`, error);
+        }
+      },
 
       // Computed function
       getGovernmentTake: () => {
@@ -103,3 +176,51 @@ export const useConfigStore = create<ConfigState>()(
     }
   )
 );
+
+// Hook to initialize config store with user data
+export const useInitializeConfig = () => {
+  const user = useUser();
+  const initializeFromDatabase = useConfigStore(state => state.initializeFromDatabase);
+  const isInitialized = useConfigStore(state => state.isInitialized);
+
+  React.useEffect(() => {
+    if (user && !isInitialized) {
+      initializeFromDatabase(user);
+    }
+  }, [user, isInitialized, initializeFromDatabase]);
+};
+
+// Hook for config setters with database sync
+export const useConfigActions = () => {
+  const user = useUser();
+  const store = useConfigStore();
+
+  const createSyncedSetter = (field: keyof ConfigState, setter: (value: any) => void) => {
+    return async (value: any) => {
+      setter(value);
+      if (user) {
+        try {
+          await updateUserConfigFields(user, { [field]: value });
+        } catch (error) {
+          console.error(`Failed to sync ${String(field)} to database:`, error);
+        }
+      }
+    };
+  };
+
+  return {
+    setAnnualSalary: createSyncedSetter('annualSalary', store.setAnnualSalary),
+    setMonthlyNet: createSyncedSetter('monthlyNet', store.setMonthlyNet),
+    setPaymentType: createSyncedSetter('paymentType', store.setPaymentType),
+    setNormalRate: createSyncedSetter('normalRate', store.setNormalRate),
+    setExtraRate: createSyncedSetter('extraRate', store.setExtraRate),
+    setSaturdayRate: createSyncedSetter('saturdayRate', store.setSaturdayRate),
+    setSundayRate: createSyncedSetter('sundayRate', store.setSundayRate),
+    setDailyHourLimit: createSyncedSetter('dailyHourLimit', store.setDailyHourLimit),
+    setHasDieta: createSyncedSetter('hasDieta', store.setHasDieta),
+    setDietaPrice: createSyncedSetter('dietaPrice', store.setDietaPrice),
+    setHasPernocta: createSyncedSetter('hasPernocta', store.setHasPernocta),
+    setPernoctaPrice: createSyncedSetter('pernoctaPrice', store.setPernoctaPrice),
+    setMaxVacationDays: createSyncedSetter('maxVacationDays', store.setMaxVacationDays),
+  };
+};
