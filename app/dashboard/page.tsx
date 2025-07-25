@@ -148,30 +148,22 @@ export default function DashboardPage() {
                   <CalendarIcon className="h-5 w-5" />
                   Calendario de Horas
                 </h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowHours(false)}
-                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${
-                      !showHours
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}
-                  >
-                    <Euro className="h-4 w-4" />
-                    €
-                  </button>
-                  <button
-                    onClick={() => setShowHours(true)}
-                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${
-                      showHours
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}
-                  >
-                    <Clock className="h-4 w-4" />
-                    h
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowHours(!showHours)}
+                  className="flex items-center gap-2 px-3 py-1 text-sm rounded-md transition-colors bg-muted text-muted-foreground hover:bg-muted/80"
+                >
+                  {showHours ? (
+                    <>
+                      <Clock className="h-4 w-4" />
+                      h
+                    </>
+                  ) : (
+                    <>
+                      <Euro className="h-4 w-4" />
+                      €
+                    </>
+                  )}
+                </button>
               </div>
               <Calendar
                 mode="single"
