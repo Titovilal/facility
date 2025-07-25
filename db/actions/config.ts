@@ -40,19 +40,19 @@ export const createUserConfig = async (user: StackUser, data: ConfigInput): Prom
 const getDefaultConfig = (user: StackUser, data: ConfigInput): Omit<UserConfig, "id" | "createdAt" | "updatedAt"> => {
   return {
     userId: user.id,
-    annualSalary: data.annualSalary ?? "25000",
-    monthlyNet: data.monthlyNet ?? "1700",
-    paymentType: data.paymentType ?? "14",
-    normalRate: data.normalRate ?? "15.60",
-    extraRate: data.extraRate ?? "23.40",
-    saturdayRate: data.saturdayRate ?? "23.40",
-    sundayRate: data.sundayRate ?? "31.20",
-    dailyHourLimit: data.dailyHourLimit ?? "8",
-    hasDieta: data.hasDieta ?? true,
-    dietaPrice: data.dietaPrice ?? "5.00",
-    hasPernocta: data.hasPernocta ?? true,
-    pernoctaPrice: data.pernoctaPrice ?? "25.00",
-    maxVacationDays: data.maxVacationDays ?? "22",
+    annualSalary: data.annualSalary ?? "0",
+    monthlyNet: data.monthlyNet ?? "0",
+    paymentType: data.paymentType ?? "0",
+    normalRate: data.normalRate ?? "0",
+    extraRate: data.extraRate ?? "0",
+    saturdayRate: data.saturdayRate ?? "0",
+    sundayRate: data.sundayRate ?? "0",
+    dailyHourLimit: data.dailyHourLimit ?? "0",
+    hasDieta: data.hasDieta ?? false,
+    dietaPrice: data.dietaPrice ?? "0",
+    hasPernocta: data.hasPernocta ?? false,
+    pernoctaPrice: data.pernoctaPrice ?? "0",
+    maxVacationDays: data.maxVacationDays ?? "0",
   };
 };
 

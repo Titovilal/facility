@@ -31,6 +31,8 @@ export default function DashboardPage() {
     setIsPernocta,
     getMonthlyHours,
     getMonthlyEarnings,
+    getMonthlyDietas,
+    getMonthlyPernocta,
   } = useTimeEntriesStore();
 
   // Get current day data - ensure selectedDate is a valid Date
@@ -78,6 +80,8 @@ export default function DashboardPage() {
   const currentYear = currentDate.getFullYear();
   const monthlyHours = getMonthlyHours(currentYear, currentMonth);
   const monthlyEarnings = getMonthlyEarnings(currentYear, currentMonth);
+  const monthlyDietas = getMonthlyDietas(currentYear, currentMonth);
+  const monthlyPernocta = getMonthlyPernocta(currentYear, currentMonth);
 
   return (
     <div className="bg-background min-h-screen">
@@ -197,6 +201,14 @@ export default function DashboardPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Horas Domingo</span>
                   <span className="font-medium">{monthlyHours.sunday.toFixed(1)}h</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Dietas</span>
+                  <span className="font-medium">{monthlyDietas.count} (€{monthlyDietas.totalCost.toFixed(2)})</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Noches</span>
+                  <span className="font-medium">{monthlyPernocta.count} (€{monthlyPernocta.totalCost.toFixed(2)})</span>
                 </div>
                 <div className="space-y-2 border-t pt-3">
                   <div className="flex justify-between font-semibold">

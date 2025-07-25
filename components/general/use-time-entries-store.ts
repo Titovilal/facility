@@ -105,6 +105,8 @@ interface TimeEntriesState {
   getMonthlyHours: (year: number, month: number) => HourBreakdown;
   getMonthlyEarnings: (year: number, month: number) => number;
   getMonthlyDays: (year: number, month: number) => DayData[];
+  getMonthlyDietas: (year: number, month: number) => { count: number; totalCost: number };
+  getMonthlyPernocta: (year: number, month: number) => { count: number; totalCost: number };
 
   // Vacation functions
   getYearlyVacationStats: (year: number) => {
@@ -559,6 +561,50 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           const dayDate = new Date(dayData.date);
           return dayDate.getFullYear() === year && dayDate.getMonth() === month;
         });
+      },
+
+      getMonthlyDietas: (year, month) => {
+        const { monthlyData } = get();
+        const configState = useConfigStore.getState();
+        const dietaPrice = parseFloat(configState.dietaPrice) || 0;
+        
+        let totalCount = 0;
+        
+        Object.values(monthlyData).forEach((dayData) => {
+          const dayDate = new Date(dayData.date);
+          if (dayDate.getFullYear() === year && dayDate.getMonth() === month) {
+            if (dayData.vacationType === "none") {
+              totalCount += dayData.dietasCount || 0;
+            }
+          }
+        });
+
+        return {
+          count: totalCount,
+          totalCost: totalCount * dietaPrice,
+        };
+      },
+
+      getMonthlyPernocta: (year, month) => {
+        const { monthlyData } = get();
+        const configState = useConfigStore.getState();
+        const pernoctaPrice = parseFloat(configState.pernoctaPrice) || 0;
+        
+        let totalCount = 0;
+        
+        Object.values(monthlyData).forEach((dayData) => {
+          const dayDate = new Date(dayData.date);
+          if (dayDate.getFullYear() === year && dayDate.getMonth() === month) {
+            if (dayData.vacationType === "none" && dayData.isPernocta) {
+              totalCount += 1;
+            }
+          }
+        });
+
+        return {
+          count: totalCount,
+          totalCost: totalCount * pernoctaPrice,
+        };
       },
 
       getYearlyVacationStats: (year) => {
