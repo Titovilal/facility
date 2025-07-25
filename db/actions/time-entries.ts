@@ -61,10 +61,7 @@ export const updateTimeEntry = async (
   return result.length > 0 ? result[0] : null;
 };
 
-export const deleteTimeEntry = async (
-  user: StackUser,
-  entryId: string
-): Promise<boolean> => {
+export const deleteTimeEntry = async (user: StackUser, entryId: string): Promise<boolean> => {
   const db = await getRlsDb(user);
   const result = await db
     .delete(timeEntries)
@@ -83,16 +80,16 @@ export const syncTimeEntriesForDate = async (
   }>
 ): Promise<void> => {
   const db = await getRlsDb(user);
-  
+
   // Delete existing entries for this date
   await db
     .delete(timeEntries)
     .where(and(eq(timeEntries.userId, user.id), eq(timeEntries.date, date)));
-  
+
   // Insert new entries if any
   if (entries.length > 0) {
     await db.insert(timeEntries).values(
-      entries.map(entry => ({
+      entries.map((entry) => ({
         id: entry.id,
         userId: user.id,
         date,
@@ -106,10 +103,7 @@ export const syncTimeEntriesForDate = async (
 };
 
 // Daily Data Actions
-export const getDailyData = async (
-  user: StackUser,
-  date: string
-): Promise<DailyData | null> => {
+export const getDailyData = async (user: StackUser, date: string): Promise<DailyData | null> => {
   const db = await getRlsDb(user);
   const result = await db
     .select()
@@ -139,14 +133,14 @@ export const upsertDailyData = async (
 ): Promise<DailyData> => {
   const db = await getRlsDb(user);
   const existing = await getDailyData(user, date);
-  
+
   if (existing) {
     // Update existing record
     const updateData = {
       ...data,
       updatedAt: new Date(),
     };
-    
+
     const result = await db
       .update(dailyData)
       .set(updateData)
@@ -187,9 +181,9 @@ export const getMonthlyData = async (
   month: number
 ): Promise<DailyData[]> => {
   const db = await getRlsDb(user);
-  const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-  const endDate = `${year}-${String(month + 1).padStart(2, '0')}-31`;
-  
+  const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+  const endDate = `${year}-${String(month + 1).padStart(2, "0")}-31`;
+
   return await db
     .select()
     .from(dailyData)
@@ -201,21 +195,16 @@ export const getMonthlyData = async (
     );
 };
 
-export const clearDayData = async (
-  user: StackUser,
-  date: string
-): Promise<void> => {
+export const clearDayData = async (user: StackUser, date: string): Promise<void> => {
   const db = await getRlsDb(user);
-  
+
   // Delete time entries for the date
   await db
     .delete(timeEntries)
     .where(and(eq(timeEntries.userId, user.id), eq(timeEntries.date, date)));
-  
+
   // Delete daily data for the date
-  await db
-    .delete(dailyData)
-    .where(and(eq(dailyData.userId, user.id), eq(dailyData.date, date)));
+  await db.delete(dailyData).where(and(eq(dailyData.userId, user.id), eq(dailyData.date, date)));
 };
 
 export const clearMonthData = async (
@@ -224,9 +213,9 @@ export const clearMonthData = async (
   month: number
 ): Promise<void> => {
   const db = await getRlsDb(user);
-  const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-  const endDate = `${year}-${String(month + 1).padStart(2, '0')}-31`;
-  
+  const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+  const endDate = `${year}-${String(month + 1).padStart(2, "0")}-31`;
+
   // This would need proper date range filtering in a real implementation
   // For now, you'd need to implement proper date range queries
   // or handle this differently based on your date format

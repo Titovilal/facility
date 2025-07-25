@@ -1,12 +1,12 @@
 import { InferSelectModel } from "drizzle-orm";
 import { authenticatedRole, authUid, crudPolicy } from "drizzle-orm/neon";
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 // Schema for user configuration
 export const userConfig = pgTable(
   "user_config",
   {
-    id: text("id").primaryKey(),
+    id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
     userId: text("user_id").notNull().unique(),
 
     // Salario Base

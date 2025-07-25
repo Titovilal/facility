@@ -28,11 +28,16 @@ export const getOrCreateUserConfig = async (
 
 export const createUserConfig = async (user: StackUser, data: ConfigInput): Promise<UserConfig> => {
   const db = await getRlsDb(user);
-  const result = await db.insert(userConfig).values([getDefaultConfig(user, data)]).returning();
+  const result = await db
+    .insert(userConfig)
+    .values({
+      ...getDefaultConfig(user, data)
+    })
+    .returning();
   return result[0];
 };
 
-const getDefaultConfig = (user: StackUser, data: ConfigInput): Omit<UserConfig, "id"> => {
+const getDefaultConfig = (user: StackUser, data: ConfigInput): Omit<UserConfig, "id" | "createdAt" | "updatedAt"> => {
   return {
     userId: user.id,
     annualSalary: data.annualSalary ?? "25000",
@@ -48,8 +53,6 @@ const getDefaultConfig = (user: StackUser, data: ConfigInput): Omit<UserConfig, 
     hasPernocta: data.hasPernocta ?? true,
     pernoctaPrice: data.pernoctaPrice ?? "25.00",
     maxVacationDays: data.maxVacationDays ?? "22",
-    createdAt: new Date(),
-    updatedAt: new Date(),
   };
 };
 

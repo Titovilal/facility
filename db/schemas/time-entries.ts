@@ -1,6 +1,16 @@
 import { InferSelectModel } from "drizzle-orm";
 import { authenticatedRole, authUid, crudPolicy } from "drizzle-orm/neon";
-import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, real } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  real,
+} from "drizzle-orm/pg-core";
 
 // Enum for vacation types
 export const vacationTypeEnum = pgEnum("vacation_type", ["none", "full_day", "half_day"]);
@@ -37,17 +47,19 @@ export const dailyData = pgTable(
     dietasCount: integer("dietas_count").notNull().default(0),
     isPernocta: boolean("is_pernocta").notNull().default(false),
     vacationType: vacationTypeEnum("vacation_type").notNull().default("none"),
-    
+
     // Hour breakdown stored as JSON
-    hourBreakdown: jsonb("hour_breakdown").$type<{
-      normal: number;
-      saturday: number;
-      sunday: number;
-      pernocta: number;
-      extra: number;
-      total: number;
-    }>().notNull(),
-    
+    hourBreakdown: jsonb("hour_breakdown")
+      .$type<{
+        normal: number;
+        saturday: number;
+        sunday: number;
+        pernocta: number;
+        extra: number;
+        total: number;
+      }>()
+      .notNull(),
+
     totalEarnings: real("total_earnings").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
