@@ -34,6 +34,7 @@ export const timeEntries = pgTable(
       modify: authUid(table.userId),
     }),
     index("idx_time_entries_user_date").on(table.userId, table.date),
+    index("idx_time_entries_user_id").on(table.userId),
   ]
 );
 
@@ -71,6 +72,7 @@ export const dailyData = pgTable(
       modify: authUid(table.userId),
     }),
     index("idx_daily_data_user_date").on(table.userId, table.date),
+    index("idx_daily_data_user_id").on(table.userId),
   ]
 );
 

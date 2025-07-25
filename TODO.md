@@ -1,5 +1,10 @@
 # CRITICAL
 
+- Que en el resumen del mes aparezca las dietas y las noches que has hecho
+- Ahora activar pernocta como que vale una pasta, y en config solo he puesto 25 euros
+- Mejorar UI de vacaciones
+- Añadir toggle para en vez de ver por dinero, ver por horas el calendar
+
 plantea que tipo de schema o schemas habría que crear para guardar toda la info necesaria , algo tipo @db/schemas/profiles.ts, solo
 haz ese y no modifiques mas codigo, solo quiero saber
 
