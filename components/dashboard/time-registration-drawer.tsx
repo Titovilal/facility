@@ -129,7 +129,7 @@ export function TimeRegistrationDrawer({
                     onCheckedChange={(checked) => onPernoctaChange(checked === true)}
                   />
                   <Label htmlFor="pernocta" className="text-sm font-medium">
-                    Pernocta (€{(parseFloat(pernoctaPrice) || 0).toFixed(2)}/h)
+                    Pernocta (€{(parseFloat(pernoctaPrice) || 0).toFixed(2)})
                   </Label>
                 </div>
               </CardContent>

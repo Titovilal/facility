@@ -16,9 +16,11 @@ function Calendar({
   buttonVariant = "ghost",
   formatters,
   components,
+  showHours = false,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
+  showHours?: boolean;
 }) {
   const defaultClassNames = getDefaultClassNames();
 
@@ -120,7 +122,7 @@ function Calendar({
 
           return <ChevronDownIcon className={cn("size-4", className)} {...props} />;
         },
-        DayButton: CalendarDayButton,
+        DayButton: (props) => <CalendarDayButton {...props} showHours={showHours} />,
         WeekNumber: ({ children, ...props }) => {
           return (
             <td {...props}>
@@ -141,8 +143,9 @@ function CalendarDayButton({
   className,
   day,
   modifiers,
+  showHours = false,
   ...props
-}: React.ComponentProps<typeof DayButton>) {
+}: React.ComponentProps<typeof DayButton> & { showHours?: boolean }) {
   const defaultClassNames = getDefaultClassNames();
 
   // Create a stable selector that only re-renders when the specific day's data changes
@@ -160,6 +163,7 @@ function CalendarDayButton({
   }, [modifiers.focused]);
 
   const dailyEarnings = dayData?.totalEarnings || 0;
+  const dailyHours = dayData?.hourBreakdown?.total || 0;
   const vacationType = dayData?.vacationType || "none";
   const isVacationDay = vacationType !== "none";
 
@@ -188,6 +192,12 @@ function CalendarDayButton({
       <span className="text-sm font-bold">{day.date.getDate()}</span>
       {isVacationDay ? (
         <span className="text-xs font-normal text-blue-600 opacity-70">out</span>
+      ) : showHours ? (
+        dailyHours > 0 && (
+          <span className="text-xs font-normal text-orange-600 opacity-70">
+            {dailyHours.toFixed(1)}h
+          </span>
+        )
       ) : (
         dailyEarnings > 0 && (
           <span className="text-xs font-normal text-green-600 opacity-70">

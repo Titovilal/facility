@@ -92,7 +92,8 @@ interface TimeEntriesState {
       pernocta: number;
       extra: number;
       dieta: number;
-    }
+    },
+    isPernocta?: boolean
   ) => number;
   updateDayCalculations: (date: Date) => void;
 
@@ -370,12 +371,12 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         return breakdown;
       },
 
-      calculateEarnings: (hourBreakdown, dietasCount, rates) => {
+      calculateEarnings: (hourBreakdown, dietasCount, rates, isPernocta = false) => {
         const defaultRates = {
           normal: 15.6,
           saturday: 23.4,
           sunday: 31.2,
-          pernocta: 23.4,
+          pernocta: 25.0,
           extra: 23.4,
           dieta: 5.0,
         };
@@ -386,9 +387,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           (hourBreakdown.normal || 0) * (finalRates.normal || 0) +
           (hourBreakdown.saturday || 0) * (finalRates.saturday || 0) +
           (hourBreakdown.sunday || 0) * (finalRates.sunday || 0) +
-          (hourBreakdown.pernocta || 0) * (finalRates.pernocta || 0) +
           (hourBreakdown.extra || 0) * (finalRates.extra || 0) +
-          (dietasCount || 0) * (finalRates.dieta || 0);
+          (dietasCount || 0) * (finalRates.dieta || 0) +
+          (isPernocta ? (finalRates.pernocta || 0) : 0);
 
         return isNaN(earnings) ? 0 : earnings;
       },
@@ -413,7 +414,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           dieta: parseFloat(configState.dietaPrice) || 5.0,
         };
 
-        const totalEarnings = get().calculateEarnings(hourBreakdown, dayData.dietasCount, rates);
+        const totalEarnings = get().calculateEarnings(hourBreakdown, dayData.dietasCount, rates, dayData.isPernocta);
 
         set((state) => ({
           monthlyData: {
@@ -521,10 +522,13 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         Object.values(state.monthlyData).forEach((dayData) => {
           const dayDate = new Date(dayData.date);
           if (dayDate.getFullYear() === year && dayDate.getMonth() === month) {
-            Object.keys(monthlyBreakdown).forEach((key) => {
-              const value = dayData.hourBreakdown[key as keyof HourBreakdown];
-              monthlyBreakdown[key as keyof HourBreakdown] += isNaN(value) ? 0 : value;
-            });
+            // Skip vacation days - their hours shouldn't count towards work hours
+            if (dayData.vacationType === "none") {
+              Object.keys(monthlyBreakdown).forEach((key) => {
+                const value = dayData.hourBreakdown[key as keyof HourBreakdown];
+                monthlyBreakdown[key as keyof HourBreakdown] += isNaN(value) ? 0 : value;
+              });
+            }
           }
         });
 
@@ -538,8 +542,11 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         Object.values(monthlyData).forEach((dayData) => {
           const dayDate = new Date(dayData.date);
           if (dayDate.getFullYear() === year && dayDate.getMonth() === month) {
-            const earnings = isNaN(dayData.totalEarnings) ? 0 : dayData.totalEarnings;
-            totalEarnings += earnings;
+            // Skip vacation days - they don't contribute to earnings
+            if (dayData.vacationType === "none") {
+              const earnings = isNaN(dayData.totalEarnings) ? 0 : dayData.totalEarnings;
+              totalEarnings += earnings;
+            }
           }
         });
 
@@ -606,6 +613,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const monthlyDays = get().getMonthlyDays(year, month);
         const monthlyHours = get().getMonthlyHours(year, month);
         const monthlyEarnings = get().getMonthlyEarnings(year, month);
+        
+        // Count only non-vacation working days
+        const workingDays = monthlyDays.filter(day => day.vacationType === "none").length;
 
         return {
           year,
@@ -614,7 +624,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           summary: {
             hours: monthlyHours,
             totalEarnings: monthlyEarnings,
-            workingDays: monthlyDays.length,
+            workingDays,
           },
         };
       },

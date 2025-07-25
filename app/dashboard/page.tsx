@@ -8,7 +8,7 @@ import { getOrCreateProfile } from "@/db/actions/profiles";
 import type { Profile } from "@/db/schemas/profiles";
 import { configFile } from "@/lib/config";
 import { useUser } from "@stackframe/stack";
-import { CalendarIcon, ChevronRight, Clock, TrendingUp } from "lucide-react";
+import { CalendarIcon, ChevronRight, Clock, Euro, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import { toast } from "sonner";
 export default function DashboardPage() {
   const user = useUser();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [showHours, setShowHours] = useState(false);
   const router = useRouter();
 
   // Zustand stores
@@ -142,15 +143,42 @@ export default function DashboardPage() {
             </div>
             {/* Calendar Section */}
             <div className="p-4">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold md:text-xl">
-                <CalendarIcon className="h-5 w-5" />
-                Calendario de Horas
-              </h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-lg font-semibold md:text-xl">
+                  <CalendarIcon className="h-5 w-5" />
+                  Calendario de Horas
+                </h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowHours(false)}
+                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${
+                      !showHours
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    <Euro className="h-4 w-4" />
+                    €
+                  </button>
+                  <button
+                    onClick={() => setShowHours(true)}
+                    className={`flex items-center gap-1 px-3 py-1 text-sm rounded-md transition-colors ${
+                      showHours
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    <Clock className="h-4 w-4" />
+                    h
+                  </button>
+                </div>
+              </div>
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
                 showOutsideDays={false}
+                showHours={showHours}
                 className="w-full p-0 [--cell-size:theme(spacing.12)] md:[--cell-size:theme(spacing.10)]"
               />
             </div>
