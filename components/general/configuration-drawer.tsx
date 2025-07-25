@@ -27,8 +27,7 @@ import { toast } from "sonner";
 function ConfigurationForm() {
   const {
     annualSalary,
-    monthlyNet,
-    normalRate,
+    weeklyHours,
     extraRate,
     saturdayRate,
     sundayRate,
@@ -40,8 +39,7 @@ function ConfigurationForm() {
     hasPernocta,
     maxVacationDays,
     setAnnualSalary,
-    setMonthlyNet,
-    setNormalRate,
+    setWeeklyHours,
     setExtraRate,
     setSaturdayRate,
     setSundayRate,
@@ -52,10 +50,10 @@ function ConfigurationForm() {
     setHasDieta,
     setHasPernocta,
     setMaxVacationDays,
-    getGovernmentTake,
+    getNormalRate,
   } = useConfigStore();
 
-  const { annualNet, governmentTake, governmentPercentage } = getGovernmentTake();
+  const normalRate = getNormalRate();
 
   return (
     <div className="space-y-4">
@@ -79,32 +77,26 @@ function ConfigurationForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="monthly-net" className="text-muted-foreground text-xs">
-              Salario Neto Mensual (€) (Percibido)
+            <Label htmlFor="weekly-hours" className="text-muted-foreground text-xs">
+              Horas de trabajo por semana
             </Label>
             <Input
-              id="monthly-net"
+              id="weekly-hours"
               type="number"
-              step="10"
-              value={monthlyNet}
-              onChange={(e) => setMonthlyNet(e.target.value)}
+              step="1"
+              min="1"
+              max="60"
+              value={weeklyHours}
+              onChange={(e) => setWeeklyHours(e.target.value)}
               className="text-center"
             />
           </div>
 
-          {/* Cálculo automático */}
+          {/* Cálculo automático del precio por hora normal */}
           <div className="bg-muted mt-3 space-y-1 rounded-md p-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Neto Anual:</span>
-              <span className="font-medium">€{annualNet.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Retención Gobierno:</span>
-              <span className="font-medium">€{governmentTake.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">% Retención:</span>
-              <span className="font-medium">{governmentPercentage.toFixed(1)}%</span>
+              <span className="text-muted-foreground">Precio hora normal:</span>
+              <span className="font-medium">€{normalRate.toFixed(2)}</span>
             </div>
           </div>
         </CardContent>
@@ -115,19 +107,6 @@ function ConfigurationForm() {
         <CardContent className="space-y-3 p-4">
           <h3 className="text-sm font-medium">Tarifas por Hora (€)</h3>
 
-          <div className="space-y-2">
-            <Label htmlFor="normal-rate" className="text-muted-foreground text-xs">
-              Horas Normales
-            </Label>
-            <Input
-              id="normal-rate"
-              type="number"
-              step="0.01"
-              value={normalRate}
-              onChange={(e) => setNormalRate(e.target.value)}
-              className="text-center"
-            />
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="extra-rate" className="text-muted-foreground text-xs">

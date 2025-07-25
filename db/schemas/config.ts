@@ -10,27 +10,26 @@ export const userConfig = pgTable(
     userId: text("user_id").notNull().unique(),
 
     // Salario Base
-    annualSalary: text("annual_salary").notNull().default("25000"),
-    monthlyNet: text("monthly_net").notNull().default("1700"),
-    paymentType: text("payment_type").notNull().default("14"),
+    annualSalary: text("annual_salary").notNull().default("0"),
+    weeklyHours: text("weekly_hours").notNull().default("0"),
+    paymentType: text("payment_type").notNull().default("0"),
 
     // Tarifas por Hora
-    normalRate: text("normal_rate").notNull().default("15.60"),
-    extraRate: text("extra_rate").notNull().default("23.40"),
-    saturdayRate: text("saturday_rate").notNull().default("23.40"),
-    sundayRate: text("sunday_rate").notNull().default("31.20"),
+    extraRate: text("extra_rate").notNull().default("0"),
+    saturdayRate: text("saturday_rate").notNull().default("0"),
+    sundayRate: text("sunday_rate").notNull().default("0"),
 
     // Límite de horas
-    dailyHourLimit: text("daily_hour_limit").notNull().default("8"),
+    dailyHourLimit: text("daily_hour_limit").notNull().default("0"),
 
     // Dietas y Pernocta
-    hasDieta: boolean("has_dieta").notNull().default(true),
-    dietaPrice: text("dieta_price").notNull().default("5.00"),
-    hasPernocta: boolean("has_pernocta").notNull().default(true),
-    pernoctaPrice: text("pernocta_price").notNull().default("25.00"),
+    hasDieta: boolean("has_dieta").notNull().default(false),
+    dietaPrice: text("dieta_price").notNull().default("0"),
+    hasPernocta: boolean("has_pernocta").notNull().default(false),
+    pernoctaPrice: text("pernocta_price").notNull().default("0"),
 
     // Vacaciones
-    maxVacationDays: text("max_vacation_days").notNull().default("22"),
+    maxVacationDays: text("max_vacation_days").notNull().default("0"),
 
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

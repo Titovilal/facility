@@ -8,11 +8,10 @@ import { persist } from "zustand/middleware";
 interface ConfigState {
   // Salario Base
   annualSalary: string;
-  monthlyNet: string;
+  weeklyHours: string;
   paymentType: string;
 
   // Tarifas por Hora
-  normalRate: string;
   extraRate: string;
   saturdayRate: string;
   sundayRate: string;
@@ -35,9 +34,8 @@ interface ConfigState {
 
   // Actions
   setAnnualSalary: (value: string) => void;
-  setMonthlyNet: (value: string) => void;
+  setWeeklyHours: (value: string) => void;
   setPaymentType: (value: string) => void;
-  setNormalRate: (value: string) => void;
   setExtraRate: (value: string) => void;
   setSaturdayRate: (value: string) => void;
   setSundayRate: (value: string) => void;
@@ -53,11 +51,7 @@ interface ConfigState {
   syncToDatabase: (user: any, field: string, value: string | boolean) => Promise<void>;
 
   // Computed values
-  getGovernmentTake: () => {
-    annualNet: number;
-    governmentTake: number;
-    governmentPercentage: number;
-  };
+  getNormalRate: () => number;
 }
 
 export const useConfigStore = create<ConfigState>()(
@@ -65,9 +59,8 @@ export const useConfigStore = create<ConfigState>()(
     (set, get) => ({
       // Initial values
       annualSalary: "0",
-      monthlyNet: "0",
-      paymentType: "0",
-      normalRate: "0",
+      weeklyHours: "40",
+      paymentType: "12",
       extraRate: "0",
       saturdayRate: "0",
       sundayRate: "0",
@@ -82,9 +75,8 @@ export const useConfigStore = create<ConfigState>()(
 
       // Actions
       setAnnualSalary: (value) => set({ annualSalary: value }),
-      setMonthlyNet: (value) => set({ monthlyNet: value }),
+      setWeeklyHours: (value) => set({ weeklyHours: value }),
       setPaymentType: (value) => set({ paymentType: value }),
-      setNormalRate: (value) => set({ normalRate: value }),
       setExtraRate: (value) => set({ extraRate: value }),
       setSaturdayRate: (value) => set({ saturdayRate: value }),
       setSundayRate: (value) => set({ sundayRate: value }),
@@ -104,9 +96,8 @@ export const useConfigStore = create<ConfigState>()(
           const config = await getOrCreateUserConfig(user);
           set({
             annualSalary: config.annualSalary,
-            monthlyNet: config.monthlyNet,
+            weeklyHours: config.weeklyHours || "40",
             paymentType: config.paymentType,
-            normalRate: config.normalRate,
             extraRate: config.extraRate,
             saturdayRate: config.saturdayRate,
             sundayRate: config.sundayRate,
@@ -136,20 +127,12 @@ export const useConfigStore = create<ConfigState>()(
       },
 
       // Computed function
-      getGovernmentTake: () => {
+      getNormalRate: () => {
         const state = get();
-        const annualGross = parseFloat(state.annualSalary) || 0;
-        const monthlyNetAmount = parseFloat(state.monthlyNet) || 0;
-        const pagas = parseInt(state.paymentType);
-        const annualNet = monthlyNetAmount * pagas;
-        const governmentTake = annualGross - annualNet;
-        const governmentPercentage = annualGross > 0 ? (governmentTake / annualGross) * 100 : 0;
-
-        return {
-          annualNet,
-          governmentTake,
-          governmentPercentage,
-        };
+        const annualSalary = parseFloat(state.annualSalary) || 0;
+        const weeklyHours = parseFloat(state.weeklyHours) || 40;
+        const annualHours = weeklyHours * 52;
+        return annualHours > 0 ? annualSalary / annualHours : 0;
       },
     }),
     {
@@ -191,9 +174,8 @@ export const useConfigActions = () => {
 
   return {
     setAnnualSalary: createSyncedSetter("annualSalary", store.setAnnualSalary),
-    setMonthlyNet: createSyncedSetter("monthlyNet", store.setMonthlyNet),
+    setWeeklyHours: createSyncedSetter("weeklyHours", store.setWeeklyHours),
     setPaymentType: createSyncedSetter("paymentType", store.setPaymentType),
-    setNormalRate: createSyncedSetter("normalRate", store.setNormalRate),
     setExtraRate: createSyncedSetter("extraRate", store.setExtraRate),
     setSaturdayRate: createSyncedSetter("saturdayRate", store.setSaturdayRate),
     setSundayRate: createSyncedSetter("sundayRate", store.setSundayRate),
