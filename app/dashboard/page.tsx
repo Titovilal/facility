@@ -2,7 +2,8 @@
 
 import { TimeRegistrationDrawer } from "@/components/dashboard/time-registration-drawer";
 import { Navbar } from "@/components/general/navbar";
-import { useTimeEntriesStore } from "@/components/general/use-time-entries-store";
+import { useTimeEntriesStore, useLoadDayData, useTimeEntriesActions } from "@/components/general/use-time-entries-store";
+import { useInitializeConfig } from "@/components/general/use-config-store";
 import { Calendar } from "@/components/ui/calendar";
 import { getOrCreateProfile } from "@/db/actions/profiles";
 import type { Profile } from "@/db/schemas/profiles";
@@ -19,21 +20,35 @@ export default function DashboardPage() {
   const [showHours, setShowHours] = useState(false);
   const router = useRouter();
 
+  // Initialize stores with database data
+  useInitializeConfig();
+
   // Zustand stores
   const {
     selectedDate,
     setSelectedDate,
     getDayData,
-    addTimeEntry,
-    removeTimeEntry,
-    updateTimeEntry,
-    setDietasCount,
-    setIsPernocta,
     getMonthlyHours,
     getMonthlyEarnings,
     getMonthlyDietas,
     getMonthlyPernocta,
   } = useTimeEntriesStore();
+
+  // Load day data from database - only if selectedDate is valid
+  const isLoadingDay = useLoadDayData(
+    selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime()) 
+      ? selectedDate 
+      : undefined
+  );
+
+  // Use synced actions that save to database
+  const {
+    addTimeEntry,
+    removeTimeEntry,
+    updateTimeEntry,
+    setDietasCount,
+    setIsPernocta,
+  } = useTimeEntriesActions();
 
   // Get current day data - ensure selectedDate is a valid Date
   const currentDayData =

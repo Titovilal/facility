@@ -437,7 +437,10 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const dateKey = formatDateKey(date);
         const { loadedDates } = get();
 
-        if (loadedDates.has(dateKey)) return;
+        // Ensure loadedDates is a Set
+        const loadedDatesSet = loadedDates instanceof Set ? loadedDates : new Set();
+        
+        if (loadedDatesSet.has(dateKey)) return;
 
         set({ isLoading: true });
         try {
@@ -468,17 +471,23 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
               totalEarnings: dailyData?.totalEarnings ?? 0,
             };
 
-            set((state) => ({
-              monthlyData: {
-                ...state.monthlyData,
-                [dateKey]: dayData,
-              },
-              loadedDates: new Set(state.loadedDates).add(dateKey),
-            }));
+            set((state) => {
+              const currentLoadedDates = state.loadedDates instanceof Set ? state.loadedDates : new Set();
+              return {
+                monthlyData: {
+                  ...state.monthlyData,
+                  [dateKey]: dayData,
+                },
+                loadedDates: new Set(currentLoadedDates).add(dateKey),
+              };
+            });
           } else {
-            set((state) => ({
-              loadedDates: new Set(state.loadedDates).add(dateKey),
-            }));
+            set((state) => {
+              const currentLoadedDates = state.loadedDates instanceof Set ? state.loadedDates : new Set();
+              return {
+                loadedDates: new Set(currentLoadedDates).add(dateKey),
+              };
+            });
           }
         } catch (error) {
           console.error("Failed to load day data from database:", error);
@@ -632,7 +641,8 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const dateKey = formatDateKey(date);
         set((state) => {
           const newMonthlyData = { ...state.monthlyData };
-          const newLoadedDates = new Set(state.loadedDates);
+          const currentLoadedDates = state.loadedDates instanceof Set ? state.loadedDates : new Set();
+          const newLoadedDates = new Set(currentLoadedDates);
           delete newMonthlyData[dateKey];
           newLoadedDates.delete(dateKey);
           return {
@@ -677,6 +687,10 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
     }),
     {
       name: "facility-time-entries-storage",
+      partialize: (state) => ({
+        monthlyData: state.monthlyData,
+        selectedDate: state.selectedDate,
+      }),
     }
   )
 );
@@ -691,7 +705,8 @@ export const useLoadDayData = (date: Date | undefined) => {
   React.useEffect(() => {
     if (user && date) {
       const dateKey = formatDateKey(date);
-      if (!loadedDates.has(dateKey)) {
+      const loadedDatesSet = loadedDates instanceof Set ? loadedDates : new Set();
+      if (!loadedDatesSet.has(dateKey)) {
         loadDayFromDatabase(user, date);
       }
     }

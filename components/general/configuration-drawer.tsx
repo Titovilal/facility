@@ -21,10 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Settings } from "lucide-react";
-import { useConfigStore } from "./use-config-store";
+import { useConfigStore, useConfigActions, useInitializeConfig } from "./use-config-store";
 import { toast } from "sonner";
 
 function ConfigurationForm() {
+  // Initialize config from database
+  useInitializeConfig();
+  
   const {
     annualSalary,
     weeklyHours,
@@ -38,6 +41,11 @@ function ConfigurationForm() {
     hasDieta,
     hasPernocta,
     maxVacationDays,
+    getNormalRate,
+  } = useConfigStore();
+
+  // Use synced actions that save to database
+  const {
     setAnnualSalary,
     setWeeklyHours,
     setExtraRate,
@@ -50,8 +58,7 @@ function ConfigurationForm() {
     setHasDieta,
     setHasPernocta,
     setMaxVacationDays,
-    getNormalRate,
-  } = useConfigStore();
+  } = useConfigActions();
 
   const normalRate = getNormalRate();
 
