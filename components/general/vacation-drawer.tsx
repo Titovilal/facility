@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Drawer,
@@ -18,19 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { useTimeEntriesStore, type VacationType } from "./use-time-entries-store";
-import { useConfigStore } from "./use-config-store";
 import { CalendarDays, Info } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
+import { useConfigStore } from "./use-config-store";
+import { useTimeEntriesStore, type VacationType } from "./use-time-entries-store";
 
 function VacationForm() {
   const { setVacationType, getYearlyVacationStats } = useTimeEntriesStore();
   const { maxVacationDays } = useConfigStore();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to?: Date | undefined }>({
     from: undefined,
     to: undefined,
   });

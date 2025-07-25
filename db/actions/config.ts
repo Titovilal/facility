@@ -28,7 +28,7 @@ export const getOrCreateUserConfig = async (
 
 export const createUserConfig = async (user: StackUser, data: ConfigInput): Promise<UserConfig> => {
   const db = await getRlsDb(user);
-  const result = await db.insert(userConfig).values(getDefaultConfig(user, data)).returning();
+  const result = await db.insert(userConfig).values([getDefaultConfig(user, data)]).returning();
   return result[0];
 };
 

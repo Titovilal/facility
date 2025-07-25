@@ -1,15 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  clearDayData as dbClearDayData,
+  getDailyData,
+  getTimeEntriesForDate,
+  syncTimeEntriesForDate,
+  upsertDailyData,
+} from "@/db/actions/time-entries";
+import { useUser } from "@stackframe/stack";
+import React from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useConfigStore } from "./use-config-store";
-import { useUser } from "@stackframe/stack";
-import { 
-  syncTimeEntriesForDate, 
-  upsertDailyData, 
-  clearDayData as dbClearDayData,
-  getTimeEntriesForDate,
-  getDailyData 
-} from "@/db/actions/time-entries";
-import React from "react";
 
 export type TimeEntry = {
   id: string;
@@ -429,26 +430,26 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
       // Database sync actions
       loadDayFromDatabase: async (user, date) => {
         if (!user) return;
-        
+
         const dateKey = formatDateKey(date);
         const { loadedDates } = get();
-        
+
         if (loadedDates.has(dateKey)) return;
-        
+
         set({ isLoading: true });
         try {
           const [timeEntries, dailyData] = await Promise.all([
             getTimeEntriesForDate(user, dateKey),
-            getDailyData(user, dateKey)
+            getDailyData(user, dateKey),
           ]);
 
           if (dailyData || timeEntries.length > 0) {
             const dayData: DayData = {
               date: dateKey,
-              timeEntries: timeEntries.map(entry => ({
+              timeEntries: timeEntries.map((entry) => ({
                 id: entry.id,
                 startTime: entry.startTime,
-                endTime: entry.endTime
+                endTime: entry.endTime,
               })),
               dietasCount: dailyData?.dietasCount ?? 0,
               isPernocta: dailyData?.isPernocta ?? false,
@@ -477,7 +478,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
             }));
           }
         } catch (error) {
-          console.error('Failed to load day data from database:', error);
+          console.error("Failed to load day data from database:", error);
         } finally {
           set({ isLoading: false });
         }
@@ -485,14 +486,14 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
 
       syncDayToDatabase: async (user, date) => {
         if (!user) return;
-        
+
         const dateKey = formatDateKey(date);
         const dayData = get().getDayData(date);
-        
+
         try {
           // Sync time entries
           await syncTimeEntriesForDate(user, dateKey, dayData.timeEntries);
-          
+
           // Sync daily data
           await upsertDailyData(user, dateKey, {
             dietasCount: dayData.dietasCount,
@@ -502,7 +503,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
             totalEarnings: dayData.totalEarnings,
           });
         } catch (error) {
-          console.error('Failed to sync day data to database:', error);
+          console.error("Failed to sync day data to database:", error);
         }
       },
 
@@ -581,9 +582,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           const newLoadedDates = new Set(state.loadedDates);
           delete newMonthlyData[dateKey];
           newLoadedDates.delete(dateKey);
-          return { 
+          return {
             monthlyData: newMonthlyData,
-            loadedDates: newLoadedDates 
+            loadedDates: newLoadedDates,
           };
         });
       },
@@ -627,9 +628,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
 // Hook to load day data from database when needed
 export const useLoadDayData = (date: Date | undefined) => {
   const user = useUser();
-  const loadDayFromDatabase = useTimeEntriesStore(state => state.loadDayFromDatabase);
-  const isLoading = useTimeEntriesStore(state => state.isLoading);
-  const loadedDates = useTimeEntriesStore(state => state.loadedDates);
+  const loadDayFromDatabase = useTimeEntriesStore((state) => state.loadDayFromDatabase);
+  const isLoading = useTimeEntriesStore((state) => state.isLoading);
+  const loadedDates = useTimeEntriesStore((state) => state.loadedDates);
 
   React.useEffect(() => {
     if (user && date) {
@@ -673,7 +674,7 @@ export const useTimeEntriesActions = () => {
         try {
           await dbClearDayData(user, formatDateKey(date));
         } catch (error) {
-          console.error('Failed to clear day data from database:', error);
+          console.error("Failed to clear day data from database:", error);
         }
       }
       store.clearDayData(date);

@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { getOrCreateUserConfig, updateUserConfigFields } from "@/db/actions/config";
+import { useUser } from "@stackframe/stack";
+import React from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { useUser } from "@stackframe/stack";
-import { updateUserConfigFields, getOrCreateUserConfig } from "@/db/actions/config";
-import React from "react";
 
 interface ConfigState {
   // Salario Base
@@ -59,26 +60,6 @@ interface ConfigState {
   };
 }
 
-const createSetterWithSync = (field: string) => {
-  return (value: string | boolean) => {
-    const { set, get } = useConfigStore.getState();
-    set({ [field]: value });
-    
-    // Async sync to database (fire and forget)
-    const syncToDb = async () => {
-      const user = typeof window !== 'undefined' ? (window as any).currentUser : null;
-      if (user) {
-        try {
-          await get().syncToDatabase(user, field, value);
-        } catch (error) {
-          console.error(`Failed to sync ${field} to database:`, error);
-        }
-      }
-    };
-    syncToDb();
-  };
-};
-
 export const useConfigStore = create<ConfigState>()(
   persist(
     (set, get) => ({
@@ -117,7 +98,7 @@ export const useConfigStore = create<ConfigState>()(
       // Database sync actions
       initializeFromDatabase: async (user) => {
         if (!user || get().isInitialized) return;
-        
+
         set({ isLoading: true });
         try {
           const config = await getOrCreateUserConfig(user);
@@ -138,7 +119,7 @@ export const useConfigStore = create<ConfigState>()(
             isInitialized: true,
           });
         } catch (error) {
-          console.error('Failed to initialize config from database:', error);
+          console.error("Failed to initialize config from database:", error);
         } finally {
           set({ isLoading: false });
         }
@@ -146,7 +127,7 @@ export const useConfigStore = create<ConfigState>()(
 
       syncToDatabase: async (user, field, value) => {
         if (!user) return;
-        
+
         try {
           await updateUserConfigFields(user, { [field]: value });
         } catch (error) {
@@ -180,8 +161,8 @@ export const useConfigStore = create<ConfigState>()(
 // Hook to initialize config store with user data
 export const useInitializeConfig = () => {
   const user = useUser();
-  const initializeFromDatabase = useConfigStore(state => state.initializeFromDatabase);
-  const isInitialized = useConfigStore(state => state.isInitialized);
+  const initializeFromDatabase = useConfigStore((state) => state.initializeFromDatabase);
+  const isInitialized = useConfigStore((state) => state.isInitialized);
 
   React.useEffect(() => {
     if (user && !isInitialized) {
@@ -209,18 +190,18 @@ export const useConfigActions = () => {
   };
 
   return {
-    setAnnualSalary: createSyncedSetter('annualSalary', store.setAnnualSalary),
-    setMonthlyNet: createSyncedSetter('monthlyNet', store.setMonthlyNet),
-    setPaymentType: createSyncedSetter('paymentType', store.setPaymentType),
-    setNormalRate: createSyncedSetter('normalRate', store.setNormalRate),
-    setExtraRate: createSyncedSetter('extraRate', store.setExtraRate),
-    setSaturdayRate: createSyncedSetter('saturdayRate', store.setSaturdayRate),
-    setSundayRate: createSyncedSetter('sundayRate', store.setSundayRate),
-    setDailyHourLimit: createSyncedSetter('dailyHourLimit', store.setDailyHourLimit),
-    setHasDieta: createSyncedSetter('hasDieta', store.setHasDieta),
-    setDietaPrice: createSyncedSetter('dietaPrice', store.setDietaPrice),
-    setHasPernocta: createSyncedSetter('hasPernocta', store.setHasPernocta),
-    setPernoctaPrice: createSyncedSetter('pernoctaPrice', store.setPernoctaPrice),
-    setMaxVacationDays: createSyncedSetter('maxVacationDays', store.setMaxVacationDays),
+    setAnnualSalary: createSyncedSetter("annualSalary", store.setAnnualSalary),
+    setMonthlyNet: createSyncedSetter("monthlyNet", store.setMonthlyNet),
+    setPaymentType: createSyncedSetter("paymentType", store.setPaymentType),
+    setNormalRate: createSyncedSetter("normalRate", store.setNormalRate),
+    setExtraRate: createSyncedSetter("extraRate", store.setExtraRate),
+    setSaturdayRate: createSyncedSetter("saturdayRate", store.setSaturdayRate),
+    setSundayRate: createSyncedSetter("sundayRate", store.setSundayRate),
+    setDailyHourLimit: createSyncedSetter("dailyHourLimit", store.setDailyHourLimit),
+    setHasDieta: createSyncedSetter("hasDieta", store.setHasDieta),
+    setDietaPrice: createSyncedSetter("dietaPrice", store.setDietaPrice),
+    setHasPernocta: createSyncedSetter("hasPernocta", store.setHasPernocta),
+    setPernoctaPrice: createSyncedSetter("pernoctaPrice", store.setPernoctaPrice),
+    setMaxVacationDays: createSyncedSetter("maxVacationDays", store.setMaxVacationDays),
   };
 };
