@@ -48,9 +48,9 @@ export function HourBreakdownCard({
 
           {hourBreakdown.normal > 0 && (
             <div className="text-muted-foreground flex items-center justify-between text-sm">
-              <span>Horas Normales (€{rates.normal}/h)</span>
+              <span>Horas Normales (€{rates.normal.toFixed(2)}/h)</span>
               <span>
-                {hourBreakdown.normal.toFixed(1)}h - €
+                {hourBreakdown.normal.toFixed(2)}h - €
                 {(hourBreakdown.normal * rates.normal).toFixed(2)}
               </span>
             </div>
