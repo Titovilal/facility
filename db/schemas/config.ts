@@ -31,6 +31,9 @@ export const userConfig = pgTable(
     // Vacaciones
     maxVacationDays: text("max_vacation_days").notNull().default("0"),
 
+    // Segunda paga (14 pagas)
+    segundaPagaMonths: text("segunda_paga_months").notNull().default("6,12"),
+
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },

@@ -1,0 +1,1 @@
+ALTER TABLE "user_config" ADD COLUMN "segunda_paga_months" text DEFAULT '6,12' NOT NULL;
