@@ -28,6 +28,9 @@ interface ConfigState {
   // Vacaciones
   maxVacationDays: string;
 
+  // Segunda paga (14 pagas)
+  segundaPagaMonths: string;
+
   // Loading state
   isLoading: boolean;
   isInitialized: boolean;
@@ -45,6 +48,7 @@ interface ConfigState {
   setHasPernocta: (value: boolean) => void;
   setPernoctaPrice: (value: string) => void;
   setMaxVacationDays: (value: string) => void;
+  setSegundaPagaMonths: (value: string) => void;
 
   // Database sync actions
   initializeFromDatabase: (user: any) => Promise<void>;
@@ -70,6 +74,7 @@ export const useConfigStore = create<ConfigState>()(
       hasPernocta: false,
       pernoctaPrice: "0",
       maxVacationDays: "0",
+      segundaPagaMonths: "6,12",
       isLoading: false,
       isInitialized: false,
 
@@ -86,6 +91,7 @@ export const useConfigStore = create<ConfigState>()(
       setHasPernocta: (value) => set({ hasPernocta: value }),
       setPernoctaPrice: (value) => set({ pernoctaPrice: value }),
       setMaxVacationDays: (value) => set({ maxVacationDays: value }),
+      setSegundaPagaMonths: (value) => set({ segundaPagaMonths: value }),
 
       // Database sync actions
       initializeFromDatabase: async (user) => {
@@ -107,6 +113,7 @@ export const useConfigStore = create<ConfigState>()(
             hasPernocta: config.hasPernocta,
             pernoctaPrice: config.pernoctaPrice,
             maxVacationDays: config.maxVacationDays,
+            segundaPagaMonths: config.segundaPagaMonths || "6,12",
             isInitialized: true,
           });
         } catch (error) {
@@ -151,6 +158,7 @@ export const useConfigStore = create<ConfigState>()(
         hasPernocta: state.hasPernocta,
         pernoctaPrice: state.pernoctaPrice,
         maxVacationDays: state.maxVacationDays,
+        segundaPagaMonths: state.segundaPagaMonths,
         // NO persistir isInitialized para permitir refrescos desde DB
       }),
     }
@@ -200,5 +208,6 @@ export const useConfigActions = () => {
     setHasPernocta: createSyncedSetter("hasPernocta", store.setHasPernocta),
     setPernoctaPrice: createSyncedSetter("pernoctaPrice", store.setPernoctaPrice),
     setMaxVacationDays: createSyncedSetter("maxVacationDays", store.setMaxVacationDays),
+    setSegundaPagaMonths: createSyncedSetter("segundaPagaMonths", store.setSegundaPagaMonths),
   };
 };

@@ -52,6 +52,7 @@ const getDefaultConfig = (user: StackUser, data: ConfigInput): Omit<UserConfig, 
     hasPernocta: data.hasPernocta ?? false,
     pernoctaPrice: data.pernoctaPrice ?? "0",
     maxVacationDays: data.maxVacationDays ?? "0",
+    segundaPagaMonths: data.segundaPagaMonths ?? "6,12",
   };
 };
 
