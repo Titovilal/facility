@@ -41,6 +41,7 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
     setDietasCount,
     setIsPernocta,
     setVacationType,
+    clearDayData,
   } = useTimeEntriesActions();
 
   const dayData = getDayData(date);
@@ -78,6 +79,16 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
       }
     } else {
       toast.success("Horas guardadas correctamente");
+    }
+  };
+
+  const handleClearDay = async () => {
+    try {
+      await clearDayData(date);
+      toast.success("Día limpiado correctamente");
+    } catch (error) {
+      toast.error("Error al limpiar en la base de datos");
+      console.error("Failed to clear in database:", error);
     }
   };
   return (
@@ -179,6 +190,11 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
               <DrawerClose asChild>
                 <Button className="w-full" onClick={handleSave}>
                   Guardar Horas
+                </Button>
+              </DrawerClose>
+              <DrawerClose asChild>
+                <Button variant="destructive" className="w-full" onClick={handleClearDay}>
+                  Limpiar Día
                 </Button>
               </DrawerClose>
               <DrawerClose asChild>

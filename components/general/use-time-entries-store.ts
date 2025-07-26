@@ -494,14 +494,30 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
 
           const results = await Promise.all(dayDataPromises);
 
-          // Update state with all loaded data
+          // Clear existing month data and update with fresh data from database
           set((state) => {
             const newMonthlyData = { ...state.monthlyData };
             const currentLoadedDates =
               state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
             const newLoadedDates = new Set<string>();
-            currentLoadedDates.forEach(date => newLoadedDates.add(String(date)));
+            
+            // Preserve loaded dates from other months
+            currentLoadedDates.forEach(dateKey => {
+              const date = new Date(dateKey);
+              if (date.getFullYear() !== year || date.getMonth() !== month) {
+                newLoadedDates.add(String(dateKey));
+              }
+            });
 
+            // Clear existing month data to ensure integrity
+            Object.keys(newMonthlyData).forEach((dateKey) => {
+              const date = new Date(dateKey);
+              if (date.getFullYear() === year && date.getMonth() === month) {
+                delete newMonthlyData[dateKey];
+              }
+            });
+
+            // Add fresh data from database
             results.forEach(({ dateKey, dayData }) => {
               newLoadedDates.add(dateKey);
               if (dayData) {
