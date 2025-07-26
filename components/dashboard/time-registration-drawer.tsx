@@ -1,6 +1,5 @@
 "use client";
 
-import { useConfigStore } from "@/components/general/use-config-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,58 +14,44 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useConfigStore } from "../general/use-config-store";
+import { useTimeEntriesActions, useTimeEntriesStore } from "../general/use-time-entries-store";
+import { useUser } from "@stackframe/stack";
 import { DietasCounter } from "./dietas-counter";
 import { HourBreakdownCard } from "./hour-breakdown-card";
 import { TimeEntry } from "./time-entry";
 
-type TimeEntryType = {
-  id: string;
-  startTime: string;
-  endTime: string;
-};
-
-type HourBreakdown = {
-  normal: number;
-  saturday: number;
-  sunday: number;
-  pernocta: number;
-  extra: number;
-  total: number;
-};
-
 interface TimeRegistrationDrawerProps {
   date: Date;
-  timeEntries: TimeEntryType[];
-  dietasCount: number;
-  isPernocta: boolean;
-  hourBreakdown: HourBreakdown;
-  totalEarnings: number;
-  onAddTimeEntry: () => void;
-  onRemoveTimeEntry: (id: string) => void;
-  onUpdateTimeEntry: (id: string, field: "startTime" | "endTime", value: string) => void;
-  onDietasChange: (count: number) => void;
-  onPernoctaChange: (checked: boolean) => void;
   children: React.ReactNode;
 }
 
-export function TimeRegistrationDrawer({
-  date,
-  timeEntries,
-  dietasCount,
-  isPernocta,
-  hourBreakdown,
-  totalEarnings,
-  onAddTimeEntry,
-  onRemoveTimeEntry,
-  onUpdateTimeEntry,
-  onDietasChange,
-  onPernoctaChange,
-  children,
-}: TimeRegistrationDrawerProps) {
+export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawerProps) {
+  const user = useUser();
+  
   // Get current rates from config store
   const { pernoctaPrice } = useConfigStore();
 
-  const handleSave = () => {
+  // Get day data from store
+  const { getDayData, syncDayToDatabase } = useTimeEntriesStore();
+  const { addTimeEntry, removeTimeEntry, updateTimeEntry, setDietasCount, setIsPernocta } =
+    useTimeEntriesActions();
+
+  const dayData = getDayData(date);
+  const timeEntries = dayData?.timeEntries || [];
+  const dietasCount = dayData?.dietasCount || 0;
+  const isPernocta = dayData?.isPernocta || false;
+  const hourBreakdown = dayData?.hourBreakdown || {
+    normal: 0,
+    saturday: 0,
+    sunday: 0,
+    pernocta: 0,
+    extra: 0,
+    total: 0,
+  };
+  const totalEarnings = dayData?.totalEarnings || 0;
+
+  const handleSave = async () => {
     // Validate that at least one time entry has both start and end times
     const hasValidEntry = timeEntries.some((entry) => entry.startTime && entry.endTime);
 
@@ -75,8 +60,18 @@ export function TimeRegistrationDrawer({
       return;
     }
 
-    toast.success("Horas guardadas correctamente");
-    // The data is already being saved to the store through the onChange handlers
+    // Immediately sync to database
+    if (user) {
+      try {
+        await syncDayToDatabase(user, date);
+        toast.success("Horas guardadas correctamente");
+      } catch (error) {
+        toast.error("Error al guardar en la base de datos");
+        console.error("Failed to save to database:", error);
+      }
+    } else {
+      toast.success("Horas guardadas correctamente");
+    }
   };
   return (
     <Drawer>
@@ -105,19 +100,24 @@ export function TimeRegistrationDrawer({
                 entry={entry}
                 index={index}
                 canRemove={timeEntries.length > 1}
-                onRemove={onRemoveTimeEntry}
-                onUpdate={onUpdateTimeEntry}
+                onRemove={(id) => removeTimeEntry(date, id)}
+                onUpdate={(id, field, value) => updateTimeEntry(date, id, field, value)}
               />
             ))}
 
             {/* Add Time Entry Button */}
-            <Button type="button" variant="outline" onClick={onAddTimeEntry} className="w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => addTimeEntry(date)}
+              className="w-full"
+            >
               <Plus className="mr-2 h-4 w-4" />
               Agregar Período
             </Button>
 
             {/* Dietas Counter */}
-            <DietasCounter count={dietasCount} onChange={onDietasChange} />
+            <DietasCounter count={dietasCount} onChange={(count) => setDietasCount(date, count)} />
 
             {/* Pernocta Checkbox */}
             <Card className="p-0">
@@ -126,7 +126,7 @@ export function TimeRegistrationDrawer({
                   <Checkbox
                     id="pernocta"
                     checked={isPernocta}
-                    onCheckedChange={(checked) => onPernoctaChange(checked === true)}
+                    onCheckedChange={(checked) => setIsPernocta(date, checked === true)}
                   />
                   <Label htmlFor="pernocta" className="text-sm font-medium">
                     Pernocta (€{(parseFloat(pernoctaPrice) || 0).toFixed(2)})

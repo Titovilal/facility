@@ -3,10 +3,7 @@
 import { TimeRegistrationDrawer } from "@/components/dashboard/time-registration-drawer";
 import { Navbar } from "@/components/general/navbar";
 import { useInitializeConfig } from "@/components/general/use-config-store";
-import {
-  useTimeEntriesActions,
-  useTimeEntriesStore,
-} from "@/components/general/use-time-entries-store";
+import { useTimeEntriesStore, useLoadMonthData } from "@/components/general/use-time-entries-store";
 import { Calendar } from "@/components/ui/calendar";
 import { getOrCreateProfile } from "@/db/actions/profiles";
 import type { Profile } from "@/db/schemas/profiles";
@@ -45,9 +42,9 @@ export default function DashboardPage() {
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
 
-  // Use synced actions that save to database
-  const { addTimeEntry, removeTimeEntry, updateTimeEntry, setDietasCount, setIsPernocta } =
-    useTimeEntriesActions();
+  // Load time entries data from database for current month
+  useLoadMonthData(currentYear, currentMonth);
+
 
   // Get current day data - ensure selectedDate is a valid Date
   const currentDayData =
@@ -104,23 +101,7 @@ export default function DashboardPage() {
             <div className="lg:col-span-2">
               {selectedDate && currentDayData ? (
                 <div className="space-y-4">
-                  <TimeRegistrationDrawer
-                    date={selectedDate}
-                    timeEntries={currentDayData.timeEntries}
-                    dietasCount={currentDayData.dietasCount}
-                    isPernocta={currentDayData.isPernocta}
-                    hourBreakdown={currentDayData.hourBreakdown}
-                    totalEarnings={currentDayData.totalEarnings}
-                    onAddTimeEntry={() => selectedDate && addTimeEntry(selectedDate)}
-                    onRemoveTimeEntry={(id) => selectedDate && removeTimeEntry(selectedDate, id)}
-                    onUpdateTimeEntry={(id, field, value) =>
-                      selectedDate && updateTimeEntry(selectedDate, id, field, value)
-                    }
-                    onDietasChange={(count) => selectedDate && setDietasCount(selectedDate, count)}
-                    onPernoctaChange={(isPernocta) =>
-                      selectedDate && setIsPernocta(selectedDate, isPernocta)
-                    }
-                  >
+                  <TimeRegistrationDrawer date={selectedDate}>
                     <div className="hover:bg-accent/50 active:bg-accent group border-border/50 bg-card flex cursor-pointer items-center justify-between rounded-lg border p-4 shadow-sm transition-all hover:shadow-md">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold">
