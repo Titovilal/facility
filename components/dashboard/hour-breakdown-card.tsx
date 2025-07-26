@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { useConfigStore } from "@/components/general/use-config-store";
+import { Card, CardContent } from "@/components/ui/card";
 
 type HourBreakdown = {
   normal: number;
@@ -24,11 +24,11 @@ export function HourBreakdownCard({
   totalEarnings,
 }: HourBreakdownCardProps) {
   // Get current rates from config store
-  const { normalRate, extraRate, saturdayRate, sundayRate, dietaPrice, pernoctaPrice } =
+  const { getNormalRate, extraRate, saturdayRate, sundayRate, dietaPrice, pernoctaPrice } =
     useConfigStore();
 
   const rates = {
-    normal: parseFloat(normalRate) || 0,
+    normal: getNormalRate() || 0,
     saturday: parseFloat(saturdayRate) || 0,
     sunday: parseFloat(sundayRate) || 0,
     pernocta: parseFloat(pernoctaPrice) || 0,

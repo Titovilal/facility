@@ -89,7 +89,7 @@ export const useConfigStore = create<ConfigState>()(
 
       // Database sync actions
       initializeFromDatabase: async (user) => {
-        if (!user) return;
+        if (!user || get().isInitialized) return;
 
         set({ isLoading: true });
         try {
@@ -137,6 +137,21 @@ export const useConfigStore = create<ConfigState>()(
     }),
     {
       name: "facility-config-storage",
+      partialize: (state) => ({
+        // Solo persistir valores de configuración, no el estado de inicialización
+        annualSalary: state.annualSalary,
+        weeklyHours: state.weeklyHours,
+        paymentType: state.paymentType,
+        extraRate: state.extraRate,
+        saturdayRate: state.saturdayRate,
+        sundayRate: state.sundayRate,
+        dailyHourLimit: state.dailyHourLimit,
+        hasDieta: state.hasDieta,
+        dietaPrice: state.dietaPrice,
+        hasPernocta: state.hasPernocta,
+        pernoctaPrice: state.pernoctaPrice,
+        maxVacationDays: state.maxVacationDays,
+      }),
     }
   )
 );
@@ -145,12 +160,13 @@ export const useConfigStore = create<ConfigState>()(
 export const useInitializeConfig = () => {
   const user = useUser();
   const initializeFromDatabase = useConfigStore((state) => state.initializeFromDatabase);
+  const isInitialized = useConfigStore((state) => state.isInitialized);
 
   React.useEffect(() => {
-    if (user) {
+    if (user && !isInitialized) {
       initializeFromDatabase(user);
     }
-  }, [user, initializeFromDatabase]);
+  }, [user, isInitialized, initializeFromDatabase]);
 };
 
 // Hook for config setters with database sync

@@ -2,8 +2,11 @@
 
 import { TimeRegistrationDrawer } from "@/components/dashboard/time-registration-drawer";
 import { Navbar } from "@/components/general/navbar";
-import { useTimeEntriesStore, useLoadDayData, useTimeEntriesActions } from "@/components/general/use-time-entries-store";
 import { useInitializeConfig } from "@/components/general/use-config-store";
+import {
+  useTimeEntriesActions,
+  useTimeEntriesStore,
+} from "@/components/general/use-time-entries-store";
 import { Calendar } from "@/components/ui/calendar";
 import { getOrCreateProfile } from "@/db/actions/profiles";
 import type { Profile } from "@/db/schemas/profiles";
@@ -34,21 +37,17 @@ export default function DashboardPage() {
     getMonthlyPernocta,
   } = useTimeEntriesStore();
 
-  // Load day data from database - only if selectedDate is valid
-  const isLoadingDay = useLoadDayData(
-    selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime()) 
-      ? selectedDate 
-      : undefined
-  );
+  // Load current month data from database
+  const currentDate =
+    selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime())
+      ? selectedDate
+      : new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
 
   // Use synced actions that save to database
-  const {
-    addTimeEntry,
-    removeTimeEntry,
-    updateTimeEntry,
-    setDietasCount,
-    setIsPernocta,
-  } = useTimeEntriesActions();
+  const { addTimeEntry, removeTimeEntry, updateTimeEntry, setDietasCount, setIsPernocta } =
+    useTimeEntriesActions();
 
   // Get current day data - ensure selectedDate is a valid Date
   const currentDayData =
@@ -86,13 +85,7 @@ export default function DashboardPage() {
   }, [user, router]);
   if (!user) return null;
 
-  // Get current monthly summary - use current date if selectedDate is invalid
-  const currentDate =
-    selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime())
-      ? selectedDate
-      : new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
+  // Get current monthly summary
   const monthlyHours = getMonthlyHours(currentYear, currentMonth);
   const monthlyEarnings = getMonthlyEarnings(currentYear, currentMonth);
   const monthlyDietas = getMonthlyDietas(currentYear, currentMonth);
@@ -169,17 +162,15 @@ export default function DashboardPage() {
                 </h2>
                 <button
                   onClick={() => setShowHours(!showHours)}
-                  className="flex items-center gap-2 px-3 py-1 text-sm rounded-md transition-colors bg-muted text-muted-foreground hover:bg-muted/80"
+                  className="bg-muted text-muted-foreground hover:bg-muted/80 flex items-center gap-2 rounded-md px-3 py-1 text-sm transition-colors"
                 >
                   {showHours ? (
                     <>
-                      <Clock className="h-4 w-4" />
-                      h
+                      <Clock className="h-4 w-4" />h
                     </>
                   ) : (
                     <>
-                      <Euro className="h-4 w-4" />
-                      €
+                      <Euro className="h-4 w-4" />€
                     </>
                   )}
                 </button>
@@ -188,6 +179,7 @@ export default function DashboardPage() {
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
+                onMonthChange={() => {}}
                 showOutsideDays={false}
                 showHours={showHours}
                 className="w-full p-0 [--cell-size:theme(spacing.12)] md:[--cell-size:theme(spacing.10)]"
@@ -219,11 +211,15 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Dietas</span>
-                  <span className="font-medium">{monthlyDietas.count} (€{monthlyDietas.totalCost.toFixed(2)})</span>
+                  <span className="font-medium">
+                    {monthlyDietas.count} (€{monthlyDietas.totalCost.toFixed(2)})
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Noches</span>
-                  <span className="font-medium">{monthlyPernocta.count} (€{monthlyPernocta.totalCost.toFixed(2)})</span>
+                  <span className="font-medium">
+                    {monthlyPernocta.count} (€{monthlyPernocta.totalCost.toFixed(2)})
+                  </span>
                 </div>
                 <div className="space-y-2 border-t pt-3">
                   <div className="flex justify-between font-semibold">

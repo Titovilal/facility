@@ -99,6 +99,7 @@ interface TimeEntriesState {
 
   // Database sync actions
   loadDayFromDatabase: (user: any, date: Date) => Promise<void>;
+  loadMonthFromDatabase: (user: any, year: number, month: number) => Promise<void>;
   syncDayToDatabase: (user: any, date: Date) => Promise<void>;
 
   // Monthly summary functions
@@ -391,7 +392,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           (hourBreakdown.sunday || 0) * (finalRates.sunday || 0) +
           (hourBreakdown.extra || 0) * (finalRates.extra || 0) +
           (dietasCount || 0) * (finalRates.dieta || 0) +
-          (isPernocta ? (finalRates.pernocta || 0) : 0);
+          (isPernocta ? finalRates.pernocta || 0 : 0);
 
         return isNaN(earnings) ? 0 : earnings;
       },
@@ -408,7 +409,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         // Get current rates from config store
         const configState = useConfigStore.getState();
         const rates = {
-          normal: parseFloat(configState.normalRate) || 15.6,
+          normal: configState.getNormalRate() || 15.6,
           saturday: parseFloat(configState.saturdayRate) || 23.4,
           sunday: parseFloat(configState.sundayRate) || 31.2,
           pernocta: parseFloat(configState.pernoctaPrice) || 23.4,
@@ -416,7 +417,12 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           dieta: parseFloat(configState.dietaPrice) || 5.0,
         };
 
-        const totalEarnings = get().calculateEarnings(hourBreakdown, dayData.dietasCount, rates, dayData.isPernocta);
+        const totalEarnings = get().calculateEarnings(
+          hourBreakdown,
+          dayData.dietasCount,
+          rates,
+          dayData.isPernocta
+        );
 
         set((state) => ({
           monthlyData: {
@@ -431,6 +437,90 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
       },
 
       // Database sync actions
+      loadMonthFromDatabase: async (user, year, month) => {
+        if (!user) return;
+
+        set({ isLoading: true });
+        try {
+          // Get all days of the month
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          const monthDays = [];
+
+          for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dateKey = formatDateKey(date);
+            monthDays.push({ date, dateKey });
+          }
+
+          // Load all days in parallel
+          const dayDataPromises = monthDays.map(async ({ dateKey }) => {
+            try {
+              const [timeEntries, dailyData] = await Promise.all([
+                getTimeEntriesForDate(user, dateKey),
+                getDailyData(user, dateKey),
+              ]);
+
+              if (dailyData || timeEntries.length > 0) {
+                return {
+                  dateKey,
+                  dayData: {
+                    date: dateKey,
+                    timeEntries: timeEntries.map((entry) => ({
+                      id: entry.id,
+                      startTime: entry.startTime,
+                      endTime: entry.endTime,
+                    })),
+                    dietasCount: dailyData?.dietasCount ?? 0,
+                    isPernocta: dailyData?.isPernocta ?? false,
+                    vacationType: dailyData?.vacationType ?? "none",
+                    hourBreakdown: dailyData?.hourBreakdown ?? {
+                      normal: 0,
+                      saturday: 0,
+                      sunday: 0,
+                      pernocta: 0,
+                      extra: 0,
+                      total: 0,
+                    },
+                    totalEarnings: dailyData?.totalEarnings ?? 0,
+                  } as DayData,
+                };
+              }
+              return { dateKey, dayData: null };
+            } catch (error) {
+              console.error(`Failed to load data for ${dateKey}:`, error);
+              return { dateKey, dayData: null };
+            }
+          });
+
+          const results = await Promise.all(dayDataPromises);
+
+          // Update state with all loaded data
+          set((state) => {
+            const newMonthlyData = { ...state.monthlyData };
+            const currentLoadedDates =
+              state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
+            const newLoadedDates = new Set<string>();
+            currentLoadedDates.forEach(date => newLoadedDates.add(String(date)));
+
+            results.forEach(({ dateKey, dayData }) => {
+              newLoadedDates.add(dateKey);
+              if (dayData) {
+                newMonthlyData[dateKey] = dayData;
+              }
+            });
+
+            return {
+              ...state,
+              monthlyData: newMonthlyData,
+              loadedDates: newLoadedDates,
+            };
+          });
+        } catch (error) {
+          console.error("Failed to load month data from database:", error);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
       loadDayFromDatabase: async (user, date) => {
         if (!user) return;
 
@@ -439,7 +529,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
 
         // Ensure loadedDates is a Set
         const loadedDatesSet = loadedDates instanceof Set ? loadedDates : new Set();
-        
+
         if (loadedDatesSet.has(dateKey)) return;
 
         set({ isLoading: true });
@@ -472,20 +562,28 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
             };
 
             set((state) => {
-              const currentLoadedDates = state.loadedDates instanceof Set ? state.loadedDates : new Set();
+              const currentLoadedDates =
+                state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
+              const newLoadedDates = new Set<string>();
+              currentLoadedDates.forEach(date => newLoadedDates.add(String(date)));
+              newLoadedDates.add(dateKey);
               return {
                 monthlyData: {
                   ...state.monthlyData,
                   [dateKey]: dayData,
                 },
-                loadedDates: new Set(currentLoadedDates).add(dateKey),
+                loadedDates: newLoadedDates,
               };
             });
           } else {
             set((state) => {
-              const currentLoadedDates = state.loadedDates instanceof Set ? state.loadedDates : new Set();
+              const currentLoadedDates =
+                state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
+              const newLoadedDates = new Set<string>();
+              currentLoadedDates.forEach(date => newLoadedDates.add(String(date)));
+              newLoadedDates.add(dateKey);
               return {
-                loadedDates: new Set(currentLoadedDates).add(dateKey),
+                loadedDates: newLoadedDates,
               };
             });
           }
@@ -576,9 +674,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const { monthlyData } = get();
         const configState = useConfigStore.getState();
         const dietaPrice = parseFloat(configState.dietaPrice) || 0;
-        
+
         let totalCount = 0;
-        
+
         Object.values(monthlyData).forEach((dayData) => {
           const dayDate = new Date(dayData.date);
           if (dayDate.getFullYear() === year && dayDate.getMonth() === month) {
@@ -598,9 +696,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const { monthlyData } = get();
         const configState = useConfigStore.getState();
         const pernoctaPrice = parseFloat(configState.pernoctaPrice) || 0;
-        
+
         let totalCount = 0;
-        
+
         Object.values(monthlyData).forEach((dayData) => {
           const dayDate = new Date(dayData.date);
           if (dayDate.getFullYear() === year && dayDate.getMonth() === month) {
@@ -641,8 +739,10 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const dateKey = formatDateKey(date);
         set((state) => {
           const newMonthlyData = { ...state.monthlyData };
-          const currentLoadedDates = state.loadedDates instanceof Set ? state.loadedDates : new Set();
-          const newLoadedDates = new Set(currentLoadedDates);
+          const currentLoadedDates =
+            state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
+          const newLoadedDates = new Set<string>();
+          currentLoadedDates.forEach(date => newLoadedDates.add(String(date)));
           delete newMonthlyData[dateKey];
           newLoadedDates.delete(dateKey);
           return {
@@ -669,9 +769,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const monthlyDays = get().getMonthlyDays(year, month);
         const monthlyHours = get().getMonthlyHours(year, month);
         const monthlyEarnings = get().getMonthlyEarnings(year, month);
-        
+
         // Count only non-vacation working days
-        const workingDays = monthlyDays.filter(day => day.vacationType === "none").length;
+        const workingDays = monthlyDays.filter((day) => day.vacationType === "none").length;
 
         return {
           year,
@@ -694,6 +794,26 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
     }
   )
 );
+
+// Hook to load month data from database when needed
+export const useLoadMonthData = (year: number, month: number) => {
+  const user = useUser();
+  const loadMonthFromDatabase = useTimeEntriesStore((state) => state.loadMonthFromDatabase);
+  const isLoading = useTimeEntriesStore((state) => state.isLoading);
+  const [loadedMonths, setLoadedMonths] = React.useState<Set<string>>(new Set());
+
+  React.useEffect(() => {
+    if (user) {
+      const monthKey = `${year}-${month}`;
+      if (!loadedMonths.has(monthKey)) {
+        loadMonthFromDatabase(user, year, month);
+        setLoadedMonths((prev) => new Set(prev).add(monthKey));
+      }
+    }
+  }, [user, year, month, loadMonthFromDatabase, loadedMonths]);
+
+  return isLoading;
+};
 
 // Hook to load day data from database when needed
 export const useLoadDayData = (date: Date | undefined) => {
