@@ -2,14 +2,14 @@
 
 import { TimeRegistrationDrawer } from "@/components/dashboard/time-registration-drawer";
 import { Navbar } from "@/components/general/navbar";
-import { useInitializeConfig } from "@/components/general/use-config-store";
-import { useTimeEntriesStore, useLoadMonthData } from "@/components/general/use-time-entries-store";
+import { useConfigStore, useInitializeConfig } from "@/components/general/use-config-store";
+import { useLoadMonthData, useTimeEntriesStore } from "@/components/general/use-time-entries-store";
 import { Calendar } from "@/components/ui/calendar";
 import { getOrCreateProfile } from "@/db/actions/profiles";
 import type { Profile } from "@/db/schemas/profiles";
 import { configFile } from "@/lib/config";
 import { useUser } from "@stackframe/stack";
-import { CalendarIcon, ChevronRight, Clock, Euro, TrendingUp } from "lucide-react";
+import { CalendarIcon, ChevronRight, Clock, Euro, TrendingUp, Plane } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -18,10 +18,28 @@ export default function DashboardPage() {
   const user = useUser();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showHours, setShowHours] = useState(false);
+  const [displayedMonth, setDisplayedMonth] = useState(new Date());
   const router = useRouter();
 
   // Initialize stores with database data
   useInitializeConfig();
+
+  // Configuration store
+  const { annualSalary, paymentType, segundaPagaMonths } = useConfigStore();
+
+  // Function to calculate minimum expected monthly income for displayed month
+  const calculateMinimumMonthlyIncome = () => {
+    const salary = parseFloat(annualSalary) || 0;
+    const payments = parseFloat(paymentType) || 12;
+    const baseMonthlyIncome = salary / payments;
+
+    // Check if displayed month is a segunda paga month
+    const displayedMonthNumber = (displayedMonth.getMonth() + 1).toString();
+    const extraPayMonths = segundaPagaMonths.split(",").filter(Boolean);
+    const isExtraPayMonth = extraPayMonths.includes(displayedMonthNumber);
+
+    return isExtraPayMonth ? baseMonthlyIncome * 2 : baseMonthlyIncome;
+  };
 
   // Zustand stores
   const {
@@ -32,19 +50,15 @@ export default function DashboardPage() {
     getMonthlyEarnings,
     getMonthlyDietas,
     getMonthlyPernocta,
+    getMonthlyVacationStats,
   } = useTimeEntriesStore();
 
-  // Load current month data from database
-  const currentDate =
-    selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime())
-      ? selectedDate
-      : new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
+  // Get displayed month/year for summary calculations
+  const displayedYear = displayedMonth.getFullYear();
+  const displayedMonthIndex = displayedMonth.getMonth();
 
-  // Load time entries data from database for current month
-  useLoadMonthData(currentYear, currentMonth);
-
+  // Load time entries data from database for displayed month
+  useLoadMonthData(displayedYear, displayedMonthIndex);
 
   // Get current day data - ensure selectedDate is a valid Date
   const currentDayData =
@@ -58,6 +72,13 @@ export default function DashboardPage() {
       setSelectedDate(new Date());
     }
   }, [selectedDate, setSelectedDate]);
+
+  // Update displayed month when selectedDate changes (for initial load)
+  useEffect(() => {
+    if (selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime())) {
+      setDisplayedMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -82,11 +103,13 @@ export default function DashboardPage() {
   }, [user, router]);
   if (!user) return null;
 
-  // Get current monthly summary
-  const monthlyHours = getMonthlyHours(currentYear, currentMonth);
-  const monthlyEarnings = getMonthlyEarnings(currentYear, currentMonth);
-  const monthlyDietas = getMonthlyDietas(currentYear, currentMonth);
-  const monthlyPernocta = getMonthlyPernocta(currentYear, currentMonth);
+  // Get monthly summary for displayed month
+  const monthlyHours = getMonthlyHours(displayedYear, displayedMonthIndex);
+  const monthlyEarnings = getMonthlyEarnings(displayedYear, displayedMonthIndex);
+  const monthlyDietas = getMonthlyDietas(displayedYear, displayedMonthIndex);
+  const monthlyPernocta = getMonthlyPernocta(displayedYear, displayedMonthIndex);
+  const monthlyVacations = getMonthlyVacationStats(displayedYear, displayedMonthIndex);
+  const minimumExpectedIncome = calculateMinimumMonthlyIncome();
 
   return (
     <div className="bg-background min-h-screen">
@@ -160,7 +183,11 @@ export default function DashboardPage() {
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                onMonthChange={() => {}}
+                onMonthChange={(month) => {
+                  if (month) {
+                    setDisplayedMonth(month);
+                  }
+                }}
                 showOutsideDays={false}
                 showHours={showHours}
                 className="w-full p-0 [--cell-size:theme(spacing.12)] md:[--cell-size:theme(spacing.10)]"
@@ -169,47 +196,130 @@ export default function DashboardPage() {
 
             {/* Monthly Summary */}
             <div className="p-4 pt-0">
-              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-                <TrendingUp className="h-5 w-5" />
-                Resumen del Mes
-              </h2>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horas Normales</span>
-                  <span className="font-medium">{monthlyHours.normal.toFixed(1)}h</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horas Extra</span>
-                  <span className="font-medium">{monthlyHours.extra.toFixed(1)}h</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horas Sábado</span>
-                  <span className="font-medium">{monthlyHours.saturday.toFixed(1)}h</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Horas Domingo</span>
-                  <span className="font-medium">{monthlyHours.sunday.toFixed(1)}h</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Dietas</span>
-                  <span className="font-medium">
-                    {monthlyDietas.count} (€{monthlyDietas.totalCost.toFixed(2)})
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Noches</span>
-                  <span className="font-medium">
-                    {monthlyPernocta.count} (€{monthlyPernocta.totalCost.toFixed(2)})
-                  </span>
-                </div>
-                <div className="space-y-2 border-t pt-3">
-                  <div className="flex justify-between font-semibold">
-                    <span>Total Horas</span>
-                    <span>{monthlyHours.total.toFixed(1)}h</span>
+              <div className="text-center mb-4">
+                <h2 className="text-lg font-semibold">Resumen Mensual</h2>
+                <p className="text-muted-foreground text-sm">
+                  {displayedMonth.toLocaleDateString("es-ES", { month: "long", year: "numeric" })}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Work Hours Card */}
+                <div className="p-4 rounded-lg border bg-card">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Clock className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm font-medium">Horas Trabajadas</span>
                   </div>
-                  <div className="flex justify-between font-semibold text-green-600">
-                    <span>Total Ingresos</span>
-                    <span>€{monthlyEarnings.toFixed(2)}</span>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Normales</span>
+                      <span className="font-medium">{monthlyHours.normal.toFixed(1)}h</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Extra</span>
+                      <span className="font-medium">{monthlyHours.extra.toFixed(1)}h</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Sábado</span>
+                      <span className="font-medium">{monthlyHours.saturday.toFixed(1)}h</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Domingo</span>
+                      <span className="font-medium">{monthlyHours.sunday.toFixed(1)}h</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t font-semibold">
+                      <span>Total</span>
+                      <span>{monthlyHours.total.toFixed(1)}h</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Allowances Card */}
+                <div className="p-4 rounded-lg border bg-card">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Euro className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm font-medium">Complementos</span>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Dietas</span>
+                      <span className="font-medium">
+                        {monthlyDietas.count} (€{monthlyDietas.totalCost.toFixed(2)})
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Noches</span>
+                      <span className="font-medium">
+                        {monthlyPernocta.count} (€{monthlyPernocta.totalCost.toFixed(2)})
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vacations Card */}
+                {monthlyVacations.totalVacationDays > 0 && (
+                  <div className="p-4 rounded-lg border bg-card">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Plane className="h-4 w-4 text-purple-500" />
+                      <span className="text-sm font-medium">Vacaciones</span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      {monthlyVacations.fullDays > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Días completos</span>
+                          <span className="font-medium">{monthlyVacations.fullDays}</span>
+                        </div>
+                      )}
+                      {monthlyVacations.halfDays > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Medios días</span>
+                          <span className="font-medium">{monthlyVacations.halfDays}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between pt-2 border-t font-semibold">
+                        <span>Total días</span>
+                        <span className="text-purple-600">{monthlyVacations.totalVacationDays}</span>
+                      </div>
+                      {monthlyVacations.vacationDays.length > 0 && (
+                        <div className="pt-1">
+                          <span className="text-muted-foreground text-xs">
+                            Fechas: {monthlyVacations.vacationDays.map(day => {
+                              const date = new Date(day.date);
+                              return date.getDate();
+                            }).join(", ")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Earnings Summary Card */}
+                <div className="p-4 rounded-lg border bg-card">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                    <span className="text-sm font-medium">Resumen Económico</span>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Mínimo Esperado</span>
+                      <span className="font-medium text-blue-600">€{minimumExpectedIncome.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t font-semibold">
+                      <span>Total Ingresos</span>
+                      <span className="text-green-600">€{monthlyEarnings.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between pt-1">
+                      <span className="text-muted-foreground text-xs">
+                        {monthlyEarnings >= minimumExpectedIncome ? "✓ Objetivo alcanzado" : "⚠ Por debajo del objetivo"}
+                      </span>
+                      <span className={`text-xs font-medium ${
+                        monthlyEarnings >= minimumExpectedIncome ? "text-green-600" : "text-orange-600"
+                      }`}>
+                        {monthlyEarnings >= minimumExpectedIncome ? "+" : ""}
+                        €{(monthlyEarnings - minimumExpectedIncome).toFixed(2)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -41,6 +41,7 @@ function ConfigurationForm() {
     hasDieta,
     hasPernocta,
     maxVacationDays,
+    segundaPagaMonths,
     getNormalRate,
   } = useConfigStore();
 
@@ -58,6 +59,7 @@ function ConfigurationForm() {
     setHasDieta,
     setHasPernocta,
     setMaxVacationDays,
+    setSegundaPagaMonths,
   } = useConfigActions();
 
   const normalRate = getNormalRate();
@@ -247,6 +249,78 @@ function ConfigurationForm() {
               </SelectContent>
             </Select>
           </div>
+
+          {paymentType === "14" && (
+            <div className="space-y-3">
+              <Label className="text-muted-foreground text-xs">
+                Meses de Segunda Paga
+              </Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="primera-paga-extra" className="text-muted-foreground text-xs">
+                    Primera Paga Extra
+                  </Label>
+                  <Select 
+                    value={segundaPagaMonths.split(",")[0] || "6"} 
+                    onValueChange={(value) => {
+                      const months = segundaPagaMonths.split(",").filter(Boolean);
+                      const newMonths = [value, months[1] || "12"].sort((a, b) => parseInt(a) - parseInt(b));
+                      setSegundaPagaMonths(newMonths.join(","));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Enero</SelectItem>
+                      <SelectItem value="2">Febrero</SelectItem>
+                      <SelectItem value="3">Marzo</SelectItem>
+                      <SelectItem value="4">Abril</SelectItem>
+                      <SelectItem value="5">Mayo</SelectItem>
+                      <SelectItem value="6">Junio</SelectItem>
+                      <SelectItem value="7">Julio</SelectItem>
+                      <SelectItem value="8">Agosto</SelectItem>
+                      <SelectItem value="9">Septiembre</SelectItem>
+                      <SelectItem value="10">Octubre</SelectItem>
+                      <SelectItem value="11">Noviembre</SelectItem>
+                      <SelectItem value="12">Diciembre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="segunda-paga-extra" className="text-muted-foreground text-xs">
+                    Segunda Paga Extra
+                  </Label>
+                  <Select 
+                    value={segundaPagaMonths.split(",")[1] || "12"} 
+                    onValueChange={(value) => {
+                      const months = segundaPagaMonths.split(",").filter(Boolean);
+                      const newMonths = [months[0] || "6", value].sort((a, b) => parseInt(a) - parseInt(b));
+                      setSegundaPagaMonths(newMonths.join(","));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Enero</SelectItem>
+                      <SelectItem value="2">Febrero</SelectItem>
+                      <SelectItem value="3">Marzo</SelectItem>
+                      <SelectItem value="4">Abril</SelectItem>
+                      <SelectItem value="5">Mayo</SelectItem>
+                      <SelectItem value="6">Junio</SelectItem>
+                      <SelectItem value="7">Julio</SelectItem>
+                      <SelectItem value="8">Agosto</SelectItem>
+                      <SelectItem value="9">Septiembre</SelectItem>
+                      <SelectItem value="10">Octubre</SelectItem>
+                      <SelectItem value="11">Noviembre</SelectItem>
+                      <SelectItem value="12">Diciembre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="max-vacation-days" className="text-muted-foreground text-xs">

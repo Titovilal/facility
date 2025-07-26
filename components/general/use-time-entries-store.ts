@@ -116,6 +116,12 @@ interface TimeEntriesState {
     totalVacationDays: number;
     vacationDays: DayData[];
   };
+  getMonthlyVacationStats: (year: number, month: number) => {
+    fullDays: number;
+    halfDays: number;
+    totalVacationDays: number;
+    vacationDays: DayData[];
+  };
 
   // Utility functions
   clearDayData: (date: Date) => void;
@@ -735,6 +741,27 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const vacationDays = Object.values(monthlyData).filter((dayData) => {
           const dayDate = new Date(dayData.date);
           return dayDate.getFullYear() === year && dayData.vacationType !== "none";
+        });
+
+        const fullDays = vacationDays.filter((day) => day.vacationType === "full_day").length;
+        const halfDays = vacationDays.filter((day) => day.vacationType === "half_day").length;
+        const totalVacationDays = fullDays + halfDays * 0.5;
+
+        return {
+          fullDays,
+          halfDays,
+          totalVacationDays,
+          vacationDays: vacationDays.sort(
+            (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          ),
+        };
+      },
+
+      getMonthlyVacationStats: (year, month) => {
+        const { monthlyData } = get();
+        const vacationDays = Object.values(monthlyData).filter((dayData) => {
+          const dayDate = new Date(dayData.date);
+          return dayDate.getFullYear() === year && dayDate.getMonth() === month && dayData.vacationType !== "none";
         });
 
         const fullDays = vacationDays.filter((day) => day.vacationType === "full_day").length;
