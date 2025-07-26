@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useUser } from "@stackframe/stack";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useConfigStore } from "../general/use-config-store";
 import { useTimeEntriesActions, useTimeEntriesStore } from "../general/use-time-entries-store";
-import { useUser } from "@stackframe/stack";
 import { DietasCounter } from "./dietas-counter";
 import { HourBreakdownCard } from "./hour-breakdown-card";
 import { TimeEntry } from "./time-entry";
@@ -28,19 +28,26 @@ interface TimeRegistrationDrawerProps {
 
 export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawerProps) {
   const user = useUser();
-  
+
   // Get current rates from config store
   const { pernoctaPrice } = useConfigStore();
 
   // Get day data from store
   const { getDayData, syncDayToDatabase } = useTimeEntriesStore();
-  const { addTimeEntry, removeTimeEntry, updateTimeEntry, setDietasCount, setIsPernocta } =
-    useTimeEntriesActions();
+  const {
+    addTimeEntry,
+    removeTimeEntry,
+    updateTimeEntry,
+    setDietasCount,
+    setIsPernocta,
+    setVacationType,
+  } = useTimeEntriesActions();
 
   const dayData = getDayData(date);
   const timeEntries = dayData?.timeEntries || [];
   const dietasCount = dayData?.dietasCount || 0;
   const isPernocta = dayData?.isPernocta || false;
+  const vacationType = dayData?.vacationType || "none";
   const hourBreakdown = dayData?.hourBreakdown || {
     normal: 0,
     saturday: 0,
@@ -93,47 +100,72 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
               </p>
             </div>
 
-            {/* Time Entries */}
-            {timeEntries.map((entry, index) => (
-              <TimeEntry
-                key={entry.id}
-                entry={entry}
-                index={index}
-                canRemove={timeEntries.length > 1}
-                onRemove={(id) => removeTimeEntry(date, id)}
-                onUpdate={(id, field, value) => updateTimeEntry(date, id, field, value)}
-              />
-            ))}
-
-            {/* Add Time Entry Button */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => addTimeEntry(date)}
-              className="w-full"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Agregar Período
-            </Button>
-
-            {/* Dietas Counter */}
-            <DietasCounter count={dietasCount} onChange={(count) => setDietasCount(date, count)} />
-
-            {/* Pernocta Checkbox */}
+            {/* Vacation Checkbox */}
             <Card className="p-0">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="pernocta"
-                    checked={isPernocta}
-                    onCheckedChange={(checked) => setIsPernocta(date, checked === true)}
+                    id="vacation"
+                    checked={vacationType !== "none"}
+                    onCheckedChange={(checked) =>
+                      setVacationType(date, checked ? "full_day" : "none")
+                    }
                   />
-                  <Label htmlFor="pernocta" className="text-sm font-medium">
-                    Pernocta (€{(parseFloat(pernoctaPrice) || 0).toFixed(2)})
+                  <Label htmlFor="vacation" className="text-sm font-medium">
+                    Día de vacaciones
                   </Label>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Time Entries - only show when not vacation */}
+            {vacationType === "none" && (
+              <>
+                {timeEntries.map((entry, index) => (
+                  <TimeEntry
+                    key={entry.id}
+                    entry={entry}
+                    index={index}
+                    canRemove={timeEntries.length > 1}
+                    onRemove={(id) => removeTimeEntry(date, id)}
+                    onUpdate={(id, field, value) => updateTimeEntry(date, id, field, value)}
+                  />
+                ))}
+
+                {/* Add Time Entry Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => addTimeEntry(date)}
+                  className="w-full"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Período
+                </Button>
+
+                {/* Dietas Counter */}
+                <DietasCounter
+                  count={dietasCount}
+                  onChange={(count) => setDietasCount(date, count)}
+                />
+
+                {/* Pernocta Checkbox */}
+                <Card className="p-0">
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="pernocta"
+                        checked={isPernocta}
+                        onCheckedChange={(checked) => setIsPernocta(date, checked === true)}
+                      />
+                      <Label htmlFor="pernocta" className="text-sm font-medium">
+                        Pernocta (€{(parseFloat(pernoctaPrice) || 0).toFixed(2)})
+                      </Label>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
 
             {/* Hour Breakdown Card */}
             <HourBreakdownCard

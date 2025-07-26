@@ -2,7 +2,6 @@
 
 import { ConfigurationDrawer } from "@/components/general/configuration-drawer";
 import { UserButton } from "@/components/general/user-button";
-import { VacationDrawer } from "@/components/general/vacation-drawer";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StackUser } from "@/db/db";
 import type { Profile } from "@/db/schemas/profiles";
@@ -35,7 +34,6 @@ export function Navbar({ profile, user }: NavbarProps) {
           <h1 className="text-lg font-semibold md:text-xl">Facility</h1>
         </div>
         <div className="flex items-center gap-2">
-          <VacationDrawer />
           <ConfigurationDrawer />
           {profile ? <UserButton profile={profile} user={user} /> : <UserButtonSkeleton />}
         </div>
