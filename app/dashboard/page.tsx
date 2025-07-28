@@ -35,7 +35,9 @@ export default function DashboardPage() {
     extraRate,
     saturdayRate,
     sundayRate,
+    hasDieta,
     dietaPrice,
+    hasPernocta,
     pernoctaPrice,
     getNormalRate,
   } = useConfigStore();
@@ -324,52 +326,66 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Allowances Card */}
-                <div className="bg-card rounded-lg border p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Euro className="h-4 w-4 text-orange-500" />
-                    <span className="text-sm font-medium">Complementos</span>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Dietas</span>
-                      <div className="flex flex-col items-end">
-                        <span className="font-medium">
-                          {monthlyDietas.count}{" "}
-                          <span className="text-muted-foreground text-xs">
-                            (€{parseFloat(dietaPrice) || 0}/u)
+                {/* Allowances Card - Only shown if at least one of hasDieta or hasPernocta is true */}
+                {(hasDieta || hasPernocta) && (
+                  <div className="bg-card rounded-lg border p-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Euro className="h-4 w-4 text-orange-500" />
+                      <span className="text-sm font-medium">Complementos</span>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      {hasDieta && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Dietas</span>
+                          <div className="flex flex-col items-end">
+                            <span className="font-medium">
+                              {monthlyDietas.count}{" "}
+                              <span className="text-muted-foreground text-xs">
+                                (€{parseFloat(dietaPrice) || 0}/u)
+                              </span>
+                            </span>
+                            <span className="text-xs font-medium text-green-600">
+                              €{monthlyDietas.totalCost.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {hasPernocta && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Noches</span>
+                          <div className="flex flex-col items-end">
+                            <span className="font-medium">
+                              {monthlyPernocta.count}{" "}
+                              <span className="text-muted-foreground text-xs">
+                                (€{parseFloat(pernoctaPrice) || 0}/u)
+                              </span>
+                            </span>
+                            <span className="text-xs font-medium text-green-600">
+                              €{monthlyPernocta.totalCost.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-t pt-2 font-semibold">
+                        <span>Total</span>
+                        <div className="flex flex-col items-end">
+                          <span>
+                            {(hasDieta ? monthlyDietas.count : 0) +
+                              (hasPernocta ? monthlyPernocta.count : 0)}{" "}
+                            complementos
                           </span>
-                        </span>
-                        <span className="text-xs font-medium text-green-600">
-                          €{monthlyDietas.totalCost.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Noches</span>
-                      <div className="flex flex-col items-end">
-                        <span className="font-medium">
-                          {monthlyPernocta.count}{" "}
-                          <span className="text-muted-foreground text-xs">
-                            (€{parseFloat(pernoctaPrice) || 0}/u)
+                          <span className="text-xs font-medium text-green-600">
+                            €
+                            {(
+                              (hasDieta ? monthlyDietas.totalCost : 0) +
+                              (hasPernocta ? monthlyPernocta.totalCost : 0)
+                            ).toFixed(2)}
                           </span>
-                        </span>
-                        <span className="text-xs font-medium text-green-600">
-                          €{monthlyPernocta.totalCost.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between border-t pt-2 font-semibold">
-                      <span>Total</span>
-                      <div className="flex flex-col items-end">
-                        <span>{monthlyDietas.count + monthlyPernocta.count} complementos</span>
-                        <span className="text-xs font-medium text-green-600">
-                          €{(monthlyDietas.totalCost + monthlyPernocta.totalCost).toFixed(2)}
-                        </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Vacations Card */}
                 {monthlyVacations.totalVacationDays > 0 && (
