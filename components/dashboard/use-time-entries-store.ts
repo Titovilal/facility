@@ -672,13 +672,11 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         Object.values(state.monthlyData).forEach((dayData) => {
           const dayDate = new Date(dayData.date);
           if (dayDate.getFullYear() === year && dayDate.getMonth() === month) {
-            // Skip vacation days - their hours shouldn't count towards work hours
-            if (dayData.vacationType === "none") {
-              Object.keys(monthlyBreakdown).forEach((key) => {
-                const value = dayData.hourBreakdown[key as keyof HourBreakdown];
-                monthlyBreakdown[key as keyof HourBreakdown] += isNaN(value) ? 0 : value;
-              });
-            }
+            // Include all days including vacation days in the hour counts
+            Object.keys(monthlyBreakdown).forEach((key) => {
+              const value = dayData.hourBreakdown[key as keyof HourBreakdown];
+              monthlyBreakdown[key as keyof HourBreakdown] += isNaN(value) ? 0 : value;
+            });
           }
         });
 
@@ -692,11 +690,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         Object.values(monthlyData).forEach((dayData) => {
           const dayDate = new Date(dayData.date);
           if (dayDate.getFullYear() === year && dayDate.getMonth() === month) {
-            // Skip vacation days - they don't contribute to earnings
-            if (dayData.vacationType === "none") {
-              const earnings = isNaN(dayData.totalEarnings) ? 0 : dayData.totalEarnings;
-              totalEarnings += earnings;
-            }
+            // Include all days, including vacation days, in earnings calculation
+            const earnings = isNaN(dayData.totalEarnings) ? 0 : dayData.totalEarnings;
+            totalEarnings += earnings;
           }
         });
 
@@ -836,8 +832,8 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const monthlyHours = get().getMonthlyHours(year, month);
         const monthlyEarnings = get().getMonthlyEarnings(year, month);
 
-        // Count only non-vacation working days
-        const workingDays = monthlyDays.filter((day) => day.vacationType === "none").length;
+        // Count all working days including vacation days
+        const workingDays = monthlyDays.length;
 
         return {
           year,

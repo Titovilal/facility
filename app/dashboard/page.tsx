@@ -28,7 +28,17 @@ export default function DashboardPage() {
   useInitializeConfig();
 
   // Configuration store
-  const { annualSalary, paymentType, segundaPagaMonths } = useConfigStore();
+  const {
+    annualSalary,
+    paymentType,
+    segundaPagaMonths,
+    extraRate,
+    saturdayRate,
+    sundayRate,
+    dietaPrice,
+    pernoctaPrice,
+    getNormalRate,
+  } = useConfigStore();
 
   // Function to calculate minimum expected monthly income for displayed month
   const calculateMinimumMonthlyIncome = () => {
@@ -216,20 +226,54 @@ export default function DashboardPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Normales</span>
-                      <span className="font-medium">{monthlyHours.normal.toFixed(1)}h</span>
+                      <span className="font-medium">
+                        {monthlyHours.normal.toFixed(1)}h{" "}
+                        <span className="text-muted-foreground text-xs">
+                          (€{getNormalRate().toFixed(2)}/h)
+                        </span>
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Extra</span>
-                      <span className="font-medium">{monthlyHours.extra.toFixed(1)}h</span>
+                      <span className="font-medium">
+                        {monthlyHours.extra.toFixed(1)}h{" "}
+                        <span className="text-muted-foreground text-xs">
+                          (€{parseFloat(extraRate) || 0}/h)
+                        </span>
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Sábado</span>
-                      <span className="font-medium">{monthlyHours.saturday.toFixed(1)}h</span>
+                      <span className="font-medium">
+                        {monthlyHours.saturday.toFixed(1)}h{" "}
+                        <span className="text-muted-foreground text-xs">
+                          (€{parseFloat(saturdayRate) || 0}/h)
+                        </span>
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Domingo</span>
-                      <span className="font-medium">{monthlyHours.sunday.toFixed(1)}h</span>
+                      <span className="font-medium">
+                        {monthlyHours.sunday.toFixed(1)}h{" "}
+                        <span className="text-muted-foreground text-xs">
+                          (€{parseFloat(sundayRate) || 0}/h)
+                        </span>
+                      </span>
                     </div>
+                    {monthlyVacations.totalVacationDays > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vacaciones</span>
+                        <span className="font-medium">
+                          {(monthlyVacations.fullDays * 8 + monthlyVacations.halfDays * 4).toFixed(
+                            1
+                          )}
+                          h{" "}
+                          <span className="text-muted-foreground text-xs">
+                            (€{getNormalRate().toFixed(2)}/h)
+                          </span>
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between border-t pt-2 font-semibold">
                       <span>Total</span>
                       <span>{monthlyHours.total.toFixed(1)}h</span>
@@ -247,13 +291,21 @@ export default function DashboardPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Dietas</span>
                       <span className="font-medium">
-                        {monthlyDietas.count} (€{monthlyDietas.totalCost.toFixed(2)})
+                        {monthlyDietas.count}{" "}
+                        <span className="text-muted-foreground text-xs">
+                          (€{parseFloat(dietaPrice) || 0}/u)
+                        </span>{" "}
+                        (€{monthlyDietas.totalCost.toFixed(2)})
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Noches</span>
                       <span className="font-medium">
-                        {monthlyPernocta.count} (€{monthlyPernocta.totalCost.toFixed(2)})
+                        {monthlyPernocta.count}{" "}
+                        <span className="text-muted-foreground text-xs">
+                          (€{parseFloat(pernoctaPrice) || 0}/u)
+                        </span>{" "}
+                        (€{monthlyPernocta.totalCost.toFixed(2)})
                       </span>
                     </div>
                   </div>
