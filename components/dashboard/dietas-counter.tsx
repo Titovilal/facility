@@ -1,10 +1,10 @@
 "use client";
 
+import { useConfigStore } from "@/components/navbar/use-config-store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Minus, Plus, Utensils } from "lucide-react";
-import { useConfigStore } from "@/components/general/use-config-store";
 
 interface DietasCounterProps {
   count: number;

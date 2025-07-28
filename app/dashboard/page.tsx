@@ -1,15 +1,18 @@
 "use client";
 
 import { TimeRegistrationDrawer } from "@/components/dashboard/time-registration-drawer";
-import { Navbar } from "@/components/general/navbar";
-import { useConfigStore, useInitializeConfig } from "@/components/general/use-config-store";
-import { useLoadMonthData, useTimeEntriesStore } from "@/components/general/use-time-entries-store";
+import {
+  useLoadMonthData,
+  useTimeEntriesStore,
+} from "@/components/dashboard/use-time-entries-store";
+import { Navbar } from "@/components/navbar/navbar";
+import { useConfigStore, useInitializeConfig } from "@/components/navbar/use-config-store";
 import { Calendar } from "@/components/ui/calendar";
 import { getOrCreateProfile } from "@/db/actions/profiles";
 import type { Profile } from "@/db/schemas/profiles";
 import { configFile } from "@/lib/config";
 import { useUser } from "@stackframe/stack";
-import { CalendarIcon, ChevronRight, Clock, Euro, TrendingUp, Plane } from "lucide-react";
+import { CalendarIcon, ChevronRight, Clock, Euro, Plane, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -196,7 +199,7 @@ export default function DashboardPage() {
 
             {/* Monthly Summary */}
             <div className="p-4 pt-0">
-              <div className="text-center mb-4">
+              <div className="mb-4 text-center">
                 <h2 className="text-lg font-semibold">Resumen Mensual</h2>
                 <p className="text-muted-foreground text-sm">
                   {displayedMonth.toLocaleDateString("es-ES", { month: "long", year: "numeric" })}
@@ -205,8 +208,8 @@ export default function DashboardPage() {
 
               <div className="space-y-4">
                 {/* Work Hours Card */}
-                <div className="p-4 rounded-lg border bg-card">
-                  <div className="flex items-center gap-2 mb-3">
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="mb-3 flex items-center gap-2">
                     <Clock className="h-4 w-4 text-blue-500" />
                     <span className="text-sm font-medium">Horas Trabajadas</span>
                   </div>
@@ -227,7 +230,7 @@ export default function DashboardPage() {
                       <span className="text-muted-foreground">Domingo</span>
                       <span className="font-medium">{monthlyHours.sunday.toFixed(1)}h</span>
                     </div>
-                    <div className="flex justify-between pt-2 border-t font-semibold">
+                    <div className="flex justify-between border-t pt-2 font-semibold">
                       <span>Total</span>
                       <span>{monthlyHours.total.toFixed(1)}h</span>
                     </div>
@@ -235,8 +238,8 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Allowances Card */}
-                <div className="p-4 rounded-lg border bg-card">
-                  <div className="flex items-center gap-2 mb-3">
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="mb-3 flex items-center gap-2">
                     <Euro className="h-4 w-4 text-orange-500" />
                     <span className="text-sm font-medium">Complementos</span>
                   </div>
@@ -258,8 +261,8 @@ export default function DashboardPage() {
 
                 {/* Vacations Card */}
                 {monthlyVacations.totalVacationDays > 0 && (
-                  <div className="p-4 rounded-lg border bg-card">
-                    <div className="flex items-center gap-2 mb-3">
+                  <div className="bg-card rounded-lg border p-4">
+                    <div className="mb-3 flex items-center gap-2">
                       <Plane className="h-4 w-4 text-purple-500" />
                       <span className="text-sm font-medium">Vacaciones</span>
                     </div>
@@ -276,17 +279,22 @@ export default function DashboardPage() {
                           <span className="font-medium">{monthlyVacations.halfDays}</span>
                         </div>
                       )}
-                      <div className="flex justify-between pt-2 border-t font-semibold">
+                      <div className="flex justify-between border-t pt-2 font-semibold">
                         <span>Total días</span>
-                        <span className="text-purple-600">{monthlyVacations.totalVacationDays}</span>
+                        <span className="text-purple-600">
+                          {monthlyVacations.totalVacationDays}
+                        </span>
                       </div>
                       {monthlyVacations.vacationDays.length > 0 && (
                         <div className="pt-1">
                           <span className="text-muted-foreground text-xs">
-                            Fechas: {monthlyVacations.vacationDays.map(day => {
-                              const date = new Date(day.date);
-                              return date.getDate();
-                            }).join(", ")}
+                            Fechas:{" "}
+                            {monthlyVacations.vacationDays
+                              .map((day) => {
+                                const date = new Date(day.date);
+                                return date.getDate();
+                              })
+                              .join(", ")}
                           </span>
                         </div>
                       )}
@@ -295,29 +303,37 @@ export default function DashboardPage() {
                 )}
 
                 {/* Earnings Summary Card */}
-                <div className="p-4 rounded-lg border bg-card">
-                  <div className="flex items-center gap-2 mb-3">
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="mb-3 flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-green-500" />
                     <span className="text-sm font-medium">Resumen Económico</span>
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Mínimo Esperado</span>
-                      <span className="font-medium text-blue-600">€{minimumExpectedIncome.toFixed(2)}</span>
+                      <span className="font-medium text-blue-600">
+                        €{minimumExpectedIncome.toFixed(2)}
+                      </span>
                     </div>
-                    <div className="flex justify-between pt-2 border-t font-semibold">
+                    <div className="flex justify-between border-t pt-2 font-semibold">
                       <span>Total Ingresos</span>
                       <span className="text-green-600">€{monthlyEarnings.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between pt-1">
                       <span className="text-muted-foreground text-xs">
-                        {monthlyEarnings >= minimumExpectedIncome ? "✓ Objetivo alcanzado" : "⚠ Por debajo del objetivo"}
+                        {monthlyEarnings >= minimumExpectedIncome
+                          ? "✓ Objetivo alcanzado"
+                          : "⚠ Por debajo del objetivo"}
                       </span>
-                      <span className={`text-xs font-medium ${
-                        monthlyEarnings >= minimumExpectedIncome ? "text-green-600" : "text-orange-600"
-                      }`}>
-                        {monthlyEarnings >= minimumExpectedIncome ? "+" : ""}
-                        €{(monthlyEarnings - minimumExpectedIncome).toFixed(2)}
+                      <span
+                        className={`text-xs font-medium ${
+                          monthlyEarnings >= minimumExpectedIncome
+                            ? "text-green-600"
+                            : "text-orange-600"
+                        }`}
+                      >
+                        {monthlyEarnings >= minimumExpectedIncome ? "+" : ""}€
+                        {(monthlyEarnings - minimumExpectedIncome).toFixed(2)}
                       </span>
                     </div>
                   </div>

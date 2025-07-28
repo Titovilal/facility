@@ -15,11 +15,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUser } from "@stackframe/stack";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { useConfigStore } from "../general/use-config-store";
-import { useTimeEntriesActions, useTimeEntriesStore } from "../general/use-time-entries-store";
+import { useConfigStore } from "../navbar/use-config-store";
 import { DietasCounter } from "./dietas-counter";
 import { HourBreakdownCard } from "./hour-breakdown-card";
 import { TimeEntry } from "./time-entry";
+import { useTimeEntriesActions, useTimeEntriesStore } from "./use-time-entries-store";
 
 interface TimeRegistrationDrawerProps {
   date: Date;
@@ -30,7 +30,7 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
   const user = useUser();
 
   // Get current rates from config store
-  const { pernoctaPrice } = useConfigStore();
+  const { pernoctaPrice, hasDieta, hasPernocta } = useConfigStore();
 
   // Get day data from store
   const { getDayData, syncDayToDatabase } = useTimeEntriesStore();
@@ -58,6 +58,10 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
     total: 0,
   };
   const totalEarnings = dayData?.totalEarnings || 0;
+
+  // Si hasDieta/pernocta es false, forzar valores a 0/false
+  const effectiveDietasCount = hasDieta ? dietasCount : 0;
+  const effectiveIsPernocta = hasPernocta ? isPernocta : false;
 
   const handleSave = async () => {
     // Validate that at least one time entry has both start and end times
@@ -154,34 +158,38 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
                   Agregar Período
                 </Button>
 
-                {/* Dietas Counter */}
-                <DietasCounter
-                  count={dietasCount}
-                  onChange={(count) => setDietasCount(date, count)}
-                />
+                {/* Dietas Counter: solo si hasDieta */}
+                {hasDieta && (
+                  <DietasCounter
+                    count={effectiveDietasCount}
+                    onChange={(count) => setDietasCount(date, count)}
+                  />
+                )}
 
-                {/* Pernocta Checkbox */}
-                <Card className="p-0">
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="pernocta"
-                        checked={isPernocta}
-                        onCheckedChange={(checked) => setIsPernocta(date, checked === true)}
-                      />
-                      <Label htmlFor="pernocta" className="text-sm font-medium">
-                        Pernocta (€{(parseFloat(pernoctaPrice) || 0).toFixed(2)})
-                      </Label>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Pernocta Checkbox: solo si hasPernocta */}
+                {hasPernocta && (
+                  <Card className="p-0">
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="pernocta"
+                          checked={effectiveIsPernocta}
+                          onCheckedChange={(checked) => setIsPernocta(date, checked === true)}
+                        />
+                        <Label htmlFor="pernocta" className="text-sm font-medium">
+                          Pernocta (€{(parseFloat(pernoctaPrice) || 0).toFixed(2)})
+                        </Label>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </>
             )}
 
             {/* Hour Breakdown Card */}
             <HourBreakdownCard
               hourBreakdown={hourBreakdown}
-              dietasCount={dietasCount}
+              dietasCount={effectiveDietasCount}
               totalEarnings={totalEarnings}
             />
 

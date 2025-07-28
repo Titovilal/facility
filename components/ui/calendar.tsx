@@ -4,7 +4,7 @@ import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react
 import * as React from "react";
 import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker";
 
-import { useTimeEntriesStore } from "@/components/general/use-time-entries-store";
+import { useTimeEntriesStore } from "@/components/dashboard/use-time-entries-store";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,8 @@ function Calendar({
   formatters,
   components,
   showHours = false,
+  selected,
+  onSelect,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
@@ -24,9 +26,26 @@ function Calendar({
 }) {
   const defaultClassNames = getDefaultClassNames();
 
+  // Create a custom onSelect handler to prevent deselection
+  const handleSelect = React.useCallback(
+    (day: Date | undefined) => {
+      // If we're trying to deselect the current selection, ignore it
+      if (!day && selected) {
+        return;
+      }
+
+      // Otherwise, call the original onSelect handler
+      if (onSelect) {
+        onSelect(day);
+      }
+    },
+    [onSelect, selected]
+  );
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      weekStartsOn={1} // Set Monday as the first day of the week
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -38,6 +57,8 @@ function Calendar({
         formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
         ...formatters,
       }}
+      selected={selected}
+      onSelect={handleSelect}
       classNames={{
         root: cn("w-fit", defaultClassNames.root),
         months: cn("relative flex flex-col gap-4 md:flex-row", defaultClassNames.months),
@@ -185,13 +206,14 @@ function CalendarDayButton({
       className={cn(
         "data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 dark:hover:text-accent-foreground flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
-        className
+        className,
+        isVacationDay ? "bg-blue-300/30" : ""
       )}
       {...props}
     >
       <span className="text-sm font-bold">{day.date.getDate()}</span>
       {isVacationDay ? (
-        <span className="text-xs font-normal text-blue-600 opacity-70">out</span>
+        <span className="text-xs font-normal opacity-70">VAC</span>
       ) : showHours ? (
         dailyHours > 0 && (
           <span className="text-xs font-normal text-orange-600 opacity-70">

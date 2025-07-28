@@ -10,7 +10,7 @@ import { useUser } from "@stackframe/stack";
 import React from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { useConfigStore } from "./use-config-store";
+import { useConfigStore } from "../navbar/use-config-store";
 
 export type TimeEntry = {
   id: string;
@@ -116,7 +116,10 @@ interface TimeEntriesState {
     totalVacationDays: number;
     vacationDays: DayData[];
   };
-  getMonthlyVacationStats: (year: number, month: number) => {
+  getMonthlyVacationStats: (
+    year: number,
+    month: number
+  ) => {
     fullDays: number;
     halfDays: number;
     totalVacationDays: number;
@@ -358,13 +361,29 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           }
         });
 
-        // Handle overtime for normal weekdays only - move excess normal hours to extra
+        // Get daily hour limit from config
         const { dailyHourLimit } = useConfigStore.getState();
         const dailyLimit = parseFloat(dailyHourLimit) || 8;
-        if (breakdown.normal > dailyLimit && dayOfWeek !== 0 && dayOfWeek !== 6) {
+
+        // Handle overtime for all days (normal weekdays, Saturdays, and Sundays)
+        // Move excess hours to extra category
+        if (breakdown.normal > dailyLimit) {
           const excessHours = breakdown.normal - dailyLimit;
           breakdown.normal = dailyLimit;
-          breakdown.extra = excessHours;
+          breakdown.extra += excessHours;
+        }
+
+        // Important: Ensure weekend hours beyond dailyLimit are marked as extra
+        if (breakdown.saturday > dailyLimit) {
+          const excessHours = breakdown.saturday - dailyLimit;
+          breakdown.saturday = dailyLimit;
+          breakdown.extra += excessHours;
+        }
+
+        if (breakdown.sunday > dailyLimit) {
+          const excessHours = breakdown.sunday - dailyLimit;
+          breakdown.sunday = dailyLimit;
+          breakdown.extra += excessHours;
         }
 
         breakdown.total = isNaN(totalHours) ? 0 : totalHours;
@@ -506,9 +525,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
             const currentLoadedDates =
               state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
             const newLoadedDates = new Set<string>();
-            
+
             // Preserve loaded dates from other months
-            currentLoadedDates.forEach(dateKey => {
+            currentLoadedDates.forEach((dateKey) => {
               const date = new Date(dateKey);
               if (date.getFullYear() !== year || date.getMonth() !== month) {
                 newLoadedDates.add(String(dateKey));
@@ -587,7 +606,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
               const currentLoadedDates =
                 state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
               const newLoadedDates = new Set<string>();
-              currentLoadedDates.forEach(date => newLoadedDates.add(String(date)));
+              currentLoadedDates.forEach((date) => newLoadedDates.add(String(date)));
               newLoadedDates.add(dateKey);
               return {
                 monthlyData: {
@@ -602,7 +621,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
               const currentLoadedDates =
                 state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
               const newLoadedDates = new Set<string>();
-              currentLoadedDates.forEach(date => newLoadedDates.add(String(date)));
+              currentLoadedDates.forEach((date) => newLoadedDates.add(String(date)));
               newLoadedDates.add(dateKey);
               return {
                 loadedDates: newLoadedDates,
@@ -761,7 +780,11 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const { monthlyData } = get();
         const vacationDays = Object.values(monthlyData).filter((dayData) => {
           const dayDate = new Date(dayData.date);
-          return dayDate.getFullYear() === year && dayDate.getMonth() === month && dayData.vacationType !== "none";
+          return (
+            dayDate.getFullYear() === year &&
+            dayDate.getMonth() === month &&
+            dayData.vacationType !== "none"
+          );
         });
 
         const fullDays = vacationDays.filter((day) => day.vacationType === "full_day").length;
@@ -785,7 +808,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           const currentLoadedDates =
             state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
           const newLoadedDates = new Set<string>();
-          currentLoadedDates.forEach(date => newLoadedDates.add(String(date)));
+          currentLoadedDates.forEach((date) => newLoadedDates.add(String(date)));
           delete newMonthlyData[dateKey];
           newLoadedDates.delete(dateKey);
           return {

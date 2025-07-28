@@ -1,6 +1,6 @@
 "use client";
 
-import { useConfigStore } from "@/components/general/use-config-store";
+import { useConfigStore } from "@/components/navbar/use-config-store";
 import { Card, CardContent } from "@/components/ui/card";
 
 type HourBreakdown = {
