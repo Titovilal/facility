@@ -226,57 +226,100 @@ export default function DashboardPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Normales</span>
-                      <span className="font-medium">
-                        {monthlyHours.normal.toFixed(1)}h{" "}
-                        <span className="text-muted-foreground text-xs">
-                          (€{getNormalRate().toFixed(2)}/h)
-                        </span>
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Extra</span>
-                      <span className="font-medium">
-                        {monthlyHours.extra.toFixed(1)}h{" "}
-                        <span className="text-muted-foreground text-xs">
-                          (€{parseFloat(extraRate) || 0}/h)
-                        </span>
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sábado</span>
-                      <span className="font-medium">
-                        {monthlyHours.saturday.toFixed(1)}h{" "}
-                        <span className="text-muted-foreground text-xs">
-                          (€{parseFloat(saturdayRate) || 0}/h)
-                        </span>
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Domingo</span>
-                      <span className="font-medium">
-                        {monthlyHours.sunday.toFixed(1)}h{" "}
-                        <span className="text-muted-foreground text-xs">
-                          (€{parseFloat(sundayRate) || 0}/h)
-                        </span>
-                      </span>
-                    </div>
-                    {monthlyVacations.totalVacationDays > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Vacaciones</span>
+                      <div className="flex flex-col items-end">
                         <span className="font-medium">
-                          {(monthlyVacations.fullDays * 8 + monthlyVacations.halfDays * 4).toFixed(
-                            1
-                          )}
-                          h{" "}
+                          {monthlyHours.normal.toFixed(1)}h{" "}
                           <span className="text-muted-foreground text-xs">
                             (€{getNormalRate().toFixed(2)}/h)
                           </span>
                         </span>
+                        <span className="text-xs font-medium text-green-600">
+                          €{(monthlyHours.normal * getNormalRate()).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Extra</span>
+                      <div className="flex flex-col items-end">
+                        <span className="font-medium">
+                          {monthlyHours.extra.toFixed(1)}h{" "}
+                          <span className="text-muted-foreground text-xs">
+                            (€{parseFloat(extraRate) || 0}/h)
+                          </span>
+                        </span>
+                        <span className="text-xs font-medium text-green-600">
+                          €{(monthlyHours.extra * (parseFloat(extraRate) || 0)).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Sábado</span>
+                      <div className="flex flex-col items-end">
+                        <span className="font-medium">
+                          {monthlyHours.saturday.toFixed(1)}h{" "}
+                          <span className="text-muted-foreground text-xs">
+                            (€{parseFloat(saturdayRate) || 0}/h)
+                          </span>
+                        </span>
+                        <span className="text-xs font-medium text-green-600">
+                          €{(monthlyHours.saturday * (parseFloat(saturdayRate) || 0)).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Domingo</span>
+                      <div className="flex flex-col items-end">
+                        <span className="font-medium">
+                          {monthlyHours.sunday.toFixed(1)}h{" "}
+                          <span className="text-muted-foreground text-xs">
+                            (€{parseFloat(sundayRate) || 0}/h)
+                          </span>
+                        </span>
+                        <span className="text-xs font-medium text-green-600">
+                          €{(monthlyHours.sunday * (parseFloat(sundayRate) || 0)).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    {monthlyVacations.totalVacationDays > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Vacaciones</span>
+                        <div className="flex flex-col items-end">
+                          <span className="font-medium">
+                            {(
+                              monthlyVacations.fullDays * 8 +
+                              monthlyVacations.halfDays * 4
+                            ).toFixed(1)}
+                            h{" "}
+                            <span className="text-muted-foreground text-xs">
+                              (€{getNormalRate().toFixed(2)}/h)
+                            </span>
+                          </span>
+                          <span className="text-xs font-medium text-green-600">
+                            €
+                            {(
+                              (monthlyVacations.fullDays * 8 + monthlyVacations.halfDays * 4) *
+                              getNormalRate()
+                            ).toFixed(2)}
+                          </span>
+                        </div>
                       </div>
                     )}
                     <div className="flex justify-between border-t pt-2 font-semibold">
                       <span>Total</span>
-                      <span>{monthlyHours.total.toFixed(1)}h</span>
+                      <div className="flex flex-col items-end">
+                        <span>{monthlyHours.total.toFixed(1)}h</span>
+                        <span className="text-xs font-medium text-green-600">
+                          €
+                          {(
+                            monthlyHours.normal * getNormalRate() +
+                            monthlyHours.extra * (parseFloat(extraRate) || 0) +
+                            monthlyHours.saturday * (parseFloat(saturdayRate) || 0) +
+                            monthlyHours.sunday * (parseFloat(sundayRate) || 0) +
+                            (monthlyVacations.fullDays * 8 + monthlyVacations.halfDays * 4) *
+                              getNormalRate()
+                          ).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -290,23 +333,40 @@ export default function DashboardPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Dietas</span>
-                      <span className="font-medium">
-                        {monthlyDietas.count}{" "}
-                        <span className="text-muted-foreground text-xs">
-                          (€{parseFloat(dietaPrice) || 0}/u)
-                        </span>{" "}
-                        (€{monthlyDietas.totalCost.toFixed(2)})
-                      </span>
+                      <div className="flex flex-col items-end">
+                        <span className="font-medium">
+                          {monthlyDietas.count}{" "}
+                          <span className="text-muted-foreground text-xs">
+                            (€{parseFloat(dietaPrice) || 0}/u)
+                          </span>
+                        </span>
+                        <span className="text-xs font-medium text-green-600">
+                          €{monthlyDietas.totalCost.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Noches</span>
-                      <span className="font-medium">
-                        {monthlyPernocta.count}{" "}
-                        <span className="text-muted-foreground text-xs">
-                          (€{parseFloat(pernoctaPrice) || 0}/u)
-                        </span>{" "}
-                        (€{monthlyPernocta.totalCost.toFixed(2)})
-                      </span>
+                      <div className="flex flex-col items-end">
+                        <span className="font-medium">
+                          {monthlyPernocta.count}{" "}
+                          <span className="text-muted-foreground text-xs">
+                            (€{parseFloat(pernoctaPrice) || 0}/u)
+                          </span>
+                        </span>
+                        <span className="text-xs font-medium text-green-600">
+                          €{monthlyPernocta.totalCost.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between border-t pt-2 font-semibold">
+                      <span>Total</span>
+                      <div className="flex flex-col items-end">
+                        <span>{monthlyDietas.count + monthlyPernocta.count} complementos</span>
+                        <span className="text-xs font-medium text-green-600">
+                          €{(monthlyDietas.totalCost + monthlyPernocta.totalCost).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
