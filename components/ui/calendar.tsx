@@ -1,8 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import * as React from "react";
-import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker";
+import {
+  DateRange,
+  DayButton,
+  DayPicker,
+  getDefaultClassNames,
+  OnSelectHandler,
+} from "react-day-picker";
 
 import { useTimeEntriesStore } from "@/components/dashboard/use-time-entries-store";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -19,31 +26,94 @@ function Calendar({
   showHours = false,
   selected,
   onSelect,
+  mode = "single", // Default to single mode
   ...props
-}: React.ComponentProps<typeof DayPicker> & {
+}: Omit<React.ComponentProps<typeof DayPicker>, "selected" | "onSelect"> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
   showHours?: boolean;
+  selected?: Date | Date[] | DateRange | undefined;
+  onSelect?: (day: Date | undefined) => void;
 }) {
   const defaultClassNames = getDefaultClassNames();
 
-  // Create a custom onSelect handler to prevent deselection
-  const handleSelect = React.useCallback(
-    (day: Date | undefined) => {
-      // If we're trying to deselect the current selection, ignore it
-      if (!day && selected) {
+  // Determine if we need to use range mode based on the selected value
+  const effectiveMode = React.useMemo(() => {
+    if (selected && typeof selected === "object" && "from" in selected && selected.to) {
+      return "range";
+    }
+    if (Array.isArray(selected) && selected.length > 1) {
+      return "range";
+    }
+    return mode;
+  }, [selected, mode]);
+
+  // Convert selected to the format expected by DayPicker
+  const normalizedSelected = React.useMemo(() => {
+    if (!selected) return undefined;
+
+    if (effectiveMode === "range") {
+      if (Array.isArray(selected)) {
+        // If it's an array, use the first and last dates as range
+        if (selected.length > 1) {
+          return {
+            from: selected[0],
+            to: selected[selected.length - 1],
+          } as DateRange;
+        } else if (selected.length === 1) {
+          return { from: selected[0] } as DateRange;
+        }
+        return undefined;
+      }
+
+      // If it's a DateRange already, return as is
+      if (typeof selected === "object" && "from" in selected) {
+        return selected as DateRange;
+      }
+
+      // If it's a single Date
+      return { from: selected } as DateRange;
+    } else {
+      // For single mode, just return the date
+      if (Array.isArray(selected)) {
+        return selected.length > 0 ? selected[0] : undefined;
+      }
+      if (typeof selected === "object" && "from" in selected) {
+        return selected.from;
+      }
+      return selected;
+    }
+  }, [selected, effectiveMode]);
+
+  // Create a custom onSelect handler that adapts to the DayPicker's expected type
+  const handleDayPickerSelect = React.useCallback<OnSelectHandler<any>>(
+    (selectedDay) => {
+      if (!onSelect) return;
+
+      // If nothing is selected or the selection is cleared
+      if (!selectedDay) {
+        onSelect(undefined);
         return;
       }
 
-      // Otherwise, call the original onSelect handler
-      if (onSelect) {
-        onSelect(day);
+      // If we're trying to deselect the current selection, ignore it
+      if (!selectedDay && selected) {
+        return;
+      }
+
+      // Handle the case based on mode
+      if (effectiveMode === "range" && typeof selectedDay === "object" && "from" in selectedDay) {
+        onSelect(selectedDay.from);
+      } else {
+        // For single mode
+        onSelect(selectedDay);
       }
     },
-    [onSelect, selected]
+    [onSelect, selected, effectiveMode]
   );
 
   return (
     <DayPicker
+      mode={effectiveMode as any} // Type assertion to avoid TypeScript narrowing issues
       showOutsideDays={showOutsideDays}
       weekStartsOn={1} // Set Monday as the first day of the week
       className={cn(
@@ -57,8 +127,8 @@ function Calendar({
         formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
         ...formatters,
       }}
-      selected={selected}
-      onSelect={handleSelect}
+      selected={normalizedSelected as any}
+      onSelect={handleDayPickerSelect}
       classNames={{
         root: cn("w-fit", defaultClassNames.root),
         months: cn("relative flex flex-col gap-4 md:flex-row", defaultClassNames.months),
