@@ -13,14 +13,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { StackUser } from "@/db/db";
 import { Profile } from "@/db/schemas/profiles";
 import { formatDate } from "@/lib/utils";
-import { CreditCard, LogOut, Moon, Settings, Sun, RefreshCw } from "lucide-react";
+import { useUser } from "@stackframe/stack";
+import { CreditCard, LogOut, Moon, RefreshCw, Settings, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useTheme } from "next-themes";
-import { useConfigStore } from "./use-config-store";
 import { useTimeEntriesStore } from "../dashboard/use-time-entries-store";
-import { useUser } from "@stackframe/stack";
+import { useConfigStore } from "./use-config-store";
 
 interface UserButtonProps {
   user: StackUser;
@@ -197,33 +197,32 @@ export const UserButton = ({ user, profile }: UserButtonProps) => {
               </div>
             )}
 
-            {/* Theme Toggle */}
-            <div
-              className="hover:bg-muted/50 flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors"
-              onClick={toggleTheme}
-            >
-              <div className="flex items-center gap-3">
-                {mounted && (
-                  <div className="relative h-4 w-4">
-                    <Sun className="absolute h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                    <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-                  </div>
-                )}
-                <span>Tema</span>
-              </div>
-              <span className="text-muted-foreground text-sm capitalize">
-                {mounted
-                  ? theme === "dark"
-                    ? "oscuro"
-                    : theme === "light"
-                      ? "claro"
-                      : "sistema"
-                  : "sistema"}
-              </span>
-            </div>
-
             {/* Menu Items */}
             <div className="space-y-2">
+              {/* Theme Toggle */}
+              <div
+                className="hover:bg-muted/50 flex cursor-pointer items-center justify-between rounded-lg px-3 transition-colors"
+                onClick={toggleTheme}
+              >
+                <div className="flex items-center gap-3">
+                  {mounted && (
+                    <div className="relative h-4 w-4">
+                      <Sun className="absolute h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+                      <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+                    </div>
+                  )}
+                  <span className="text-foreground font-medium">Tema</span>
+                </div>
+                <span className="text-muted-foreground text-sm font-medium capitalize">
+                  {mounted
+                    ? theme === "dark"
+                      ? "oscuro"
+                      : theme === "light"
+                        ? "claro"
+                        : "sistema"
+                    : "sistema"}
+                </span>
+              </div>
               <Link href="/handler/account-settings">
                 <Button variant="ghost" className="w-full justify-start">
                   <Settings className="mr-2 h-4 w-4" />
