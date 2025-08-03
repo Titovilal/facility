@@ -1,4 +1,4 @@
-import { TimeEntry, timeEntries, DailyData, dailyData } from "@/db/schemas/time-entries";
+import { TimeEntry, timeEntries } from "@/db/schemas/time-entries";
 import { eq, and } from "drizzle-orm";
 import { getRlsDb, StackUser } from "../db";
 
@@ -21,6 +21,9 @@ export const createTimeEntry = async (
     date: string;
     startTime: string;
     endTime: string;
+    dietasCount?: number;
+    isPernocta?: boolean;
+    vacationType?: "none" | "full_day" | "half_day";
   }
 ): Promise<TimeEntry> => {
   const db = await getRlsDb(user);
@@ -32,6 +35,9 @@ export const createTimeEntry = async (
       date: data.date,
       startTime: data.startTime,
       endTime: data.endTime,
+      dietasCount: data.dietasCount ?? 0,
+      isPernocta: data.isPernocta ?? false,
+      vacationType: data.vacationType ?? "none",
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -45,6 +51,9 @@ export const updateTimeEntry = async (
   data: {
     startTime?: string;
     endTime?: string;
+    dietasCount?: number;
+    isPernocta?: boolean;
+    vacationType?: "none" | "full_day" | "half_day";
   }
 ): Promise<TimeEntry | null> => {
   const db = await getRlsDb(user);
@@ -77,7 +86,12 @@ export const syncTimeEntriesForDate = async (
     id: string;
     startTime: string;
     endTime: string;
-  }>
+  }>,
+  dayData?: {
+    dietasCount?: number;
+    isPernocta?: boolean;
+    vacationType?: "none" | "full_day" | "half_day";
+  }
 ): Promise<void> => {
   const db = await getRlsDb(user);
 
@@ -95,6 +109,9 @@ export const syncTimeEntriesForDate = async (
         date,
         startTime: entry.startTime,
         endTime: entry.endTime,
+        dietasCount: dayData?.dietasCount ?? 0,
+        isPernocta: dayData?.isPernocta ?? false,
+        vacationType: dayData?.vacationType ?? "none",
         createdAt: new Date(),
         updatedAt: new Date(),
       }))
@@ -102,97 +119,17 @@ export const syncTimeEntriesForDate = async (
   }
 };
 
-// Daily Data Actions
-export const getDailyData = async (user: StackUser, date: string): Promise<DailyData | null> => {
-  const db = await getRlsDb(user);
-  const result = await db
-    .select()
-    .from(dailyData)
-    .where(and(eq(dailyData.userId, user.id), eq(dailyData.date, date)))
-    .limit(1);
-  return result[0] || null;
-};
-
-export const upsertDailyData = async (
-  user: StackUser,
-  date: string,
-  data: {
-    dietasCount?: number;
-    isPernocta?: boolean;
-    vacationType?: "none" | "full_day" | "half_day";
-    hourBreakdown?: {
-      normal: number;
-      saturday: number;
-      sunday: number;
-      pernocta: number;
-      extra: number;
-      total: number;
-    };
-    totalEarnings?: number;
-  }
-): Promise<DailyData> => {
-  const db = await getRlsDb(user);
-  const existing = await getDailyData(user, date);
-
-  if (existing) {
-    // Update existing record
-    const updateData = {
-      ...data,
-      updatedAt: new Date(),
-    };
-
-    const result = await db
-      .update(dailyData)
-      .set(updateData)
-      .where(and(eq(dailyData.userId, user.id), eq(dailyData.date, date)))
-      .returning();
-    return result[0];
-  } else {
-    // Create new record
-    const result = await db
-      .insert(dailyData)
-      .values({
-        id: crypto.randomUUID(),
-        userId: user.id,
-        date,
-        dietasCount: data.dietasCount ?? 0,
-        isPernocta: data.isPernocta ?? false,
-        vacationType: data.vacationType ?? "none",
-        hourBreakdown: data.hourBreakdown ?? {
-          normal: 0,
-          saturday: 0,
-          sunday: 0,
-          pernocta: 0,
-          extra: 0,
-          total: 0,
-        },
-        totalEarnings: data.totalEarnings ?? 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning();
-    return result[0];
-  }
-};
-
-export const getMonthlyData = async (
-  user: StackUser,
-  year: number,
-  month: number
-): Promise<DailyData[]> => {
-  const db = await getRlsDb(user);
-  const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
-  const endDate = `${year}-${String(month + 1).padStart(2, "0")}-31`;
-
-  return await db
-    .select()
-    .from(dailyData)
-    .where(
-      and(
-        eq(dailyData.userId, user.id),
-        eq(dailyData.date, startDate) // This would need proper date range filtering
-      )
-    );
+// Helper function to get day data from time entries
+export const getDayDataFromEntries = (entries: TimeEntry[]) => {
+  if (entries.length === 0) return null;
+  
+  // All entries for a date should have the same day-level data
+  const firstEntry = entries[0];
+  return {
+    dietasCount: firstEntry.dietasCount,
+    isPernocta: firstEntry.isPernocta,
+    vacationType: firstEntry.vacationType,
+  };
 };
 
 export const clearDayData = async (user: StackUser, date: string): Promise<void> => {
@@ -202,21 +139,4 @@ export const clearDayData = async (user: StackUser, date: string): Promise<void>
   await db
     .delete(timeEntries)
     .where(and(eq(timeEntries.userId, user.id), eq(timeEntries.date, date)));
-
-  // Delete daily data for the date
-  await db.delete(dailyData).where(and(eq(dailyData.userId, user.id), eq(dailyData.date, date)));
-};
-
-export const clearMonthData = async (
-  user: StackUser,
-  year: number,
-  month: number
-): Promise<void> => {
-  const db = await getRlsDb(user);
-  const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
-  const endDate = `${year}-${String(month + 1).padStart(2, "0")}-31`;
-
-  // This would need proper date range filtering in a real implementation
-  // For now, you'd need to implement proper date range queries
-  // or handle this differently based on your date format
 };

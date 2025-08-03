@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  getDailyData,
+  getDayDataFromEntries,
   getTimeEntriesForDate,
   syncTimeEntriesForDate,
-  upsertDailyData,
 } from "@/db/actions/time-entries";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -481,34 +480,45 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           // Load all days in parallel
           const dayDataPromises = monthDays.map(async ({ dateKey }) => {
             try {
-              const [timeEntries, dailyData] = await Promise.all([
-                getTimeEntriesForDate(user, dateKey),
-                getDailyData(user, dateKey),
-              ]);
+              const timeEntries = await getTimeEntriesForDate(user, dateKey);
+              const dayDataFromEntries = getDayDataFromEntries(timeEntries);
 
-              if (dailyData || timeEntries.length > 0) {
+              if (timeEntries.length > 0) {
+                const date = new Date(dateKey);
+                const dayData: DayData = {
+                  date: dateKey,
+                  timeEntries: timeEntries.map((entry: any) => ({
+                    id: entry.id,
+                    startTime: entry.startTime,
+                    endTime: entry.endTime,
+                  })),
+                  dietasCount: dayDataFromEntries?.dietasCount ?? 0,
+                  isPernocta: dayDataFromEntries?.isPernocta ?? false,
+                  vacationType: dayDataFromEntries?.vacationType ?? "none",
+                  hourBreakdown: { normal: 0, saturday: 0, sunday: 0, pernocta: 0, extra: 0, total: 0 },
+                  totalEarnings: 0,
+                };
+
+                // Calculate hour breakdown and earnings
+                const hourBreakdown = get().calculateHourBreakdown(date, dayData.timeEntries, dayData.isPernocta);
+                const configState = useConfigStore.getState();
+                const rates = {
+                  normal: configState.getNormalRate(),
+                  saturday: parseFloat(configState.saturdayRate),
+                  sunday: parseFloat(configState.sundayRate),
+                  pernocta: parseFloat(configState.pernoctaPrice),
+                  extra: parseFloat(configState.extraRate),
+                  dieta: parseFloat(configState.dietaPrice),
+                };
+                const totalEarnings = get().calculateEarnings(hourBreakdown, dayData.dietasCount, rates, dayData.isPernocta);
+
                 return {
                   dateKey,
                   dayData: {
-                    date: dateKey,
-                    timeEntries: timeEntries.map((entry) => ({
-                      id: entry.id,
-                      startTime: entry.startTime,
-                      endTime: entry.endTime,
-                    })),
-                    dietasCount: dailyData?.dietasCount ?? 0,
-                    isPernocta: dailyData?.isPernocta ?? false,
-                    vacationType: dailyData?.vacationType ?? "none",
-                    hourBreakdown: dailyData?.hourBreakdown ?? {
-                      normal: 0,
-                      saturday: 0,
-                      sunday: 0,
-                      pernocta: 0,
-                      extra: 0,
-                      total: 0,
-                    },
-                    totalEarnings: dailyData?.totalEarnings ?? 0,
-                  } as DayData,
+                    ...dayData,
+                    hourBreakdown,
+                    totalEarnings,
+                  },
                 };
               }
               return { dateKey, dayData: null };
@@ -576,31 +586,41 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
 
         set({ isLoading: true });
         try {
-          const [timeEntries, dailyData] = await Promise.all([
-            getTimeEntriesForDate(user, dateKey),
-            getDailyData(user, dateKey),
-          ]);
+          const timeEntries = await getTimeEntriesForDate(user, dateKey);
+          const dayDataFromEntries = getDayDataFromEntries(timeEntries);
 
-          if (dailyData || timeEntries.length > 0) {
+          if (timeEntries.length > 0) {
             const dayData: DayData = {
               date: dateKey,
-              timeEntries: timeEntries.map((entry) => ({
+              timeEntries: timeEntries.map((entry: any) => ({
                 id: entry.id,
                 startTime: entry.startTime,
                 endTime: entry.endTime,
               })),
-              dietasCount: dailyData?.dietasCount ?? 0,
-              isPernocta: dailyData?.isPernocta ?? false,
-              vacationType: dailyData?.vacationType ?? "none",
-              hourBreakdown: dailyData?.hourBreakdown ?? {
-                normal: 0,
-                saturday: 0,
-                sunday: 0,
-                pernocta: 0,
-                extra: 0,
-                total: 0,
-              },
-              totalEarnings: dailyData?.totalEarnings ?? 0,
+              dietasCount: dayDataFromEntries?.dietasCount ?? 0,
+              isPernocta: dayDataFromEntries?.isPernocta ?? false,
+              vacationType: dayDataFromEntries?.vacationType ?? "none",
+              hourBreakdown: { normal: 0, saturday: 0, sunday: 0, pernocta: 0, extra: 0, total: 0 },
+              totalEarnings: 0,
+            };
+
+            // Calculate hour breakdown and earnings
+            const hourBreakdown = get().calculateHourBreakdown(date, dayData.timeEntries, dayData.isPernocta);
+            const configState = useConfigStore.getState();
+            const rates = {
+              normal: configState.getNormalRate(),
+              saturday: parseFloat(configState.saturdayRate),
+              sunday: parseFloat(configState.sundayRate),
+              pernocta: parseFloat(configState.pernoctaPrice),
+              extra: parseFloat(configState.extraRate),
+              dieta: parseFloat(configState.dietaPrice),
+            };
+            const totalEarnings = get().calculateEarnings(hourBreakdown, dayData.dietasCount, rates, dayData.isPernocta);
+
+            const finalDayData = {
+              ...dayData,
+              hourBreakdown,
+              totalEarnings,
             };
 
             set((state) => {
@@ -612,7 +632,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
               return {
                 monthlyData: {
                   ...state.monthlyData,
-                  [dateKey]: dayData,
+                  [dateKey]: finalDayData,
                 },
                 loadedDates: newLoadedDates,
               };
@@ -643,16 +663,11 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         const dayData = get().getDayData(date);
 
         try {
-          // Sync time entries
-          await syncTimeEntriesForDate(user, dateKey, dayData.timeEntries);
-
-          // Sync daily data
-          await upsertDailyData(user, dateKey, {
+          // Sync time entries with day-level data
+          await syncTimeEntriesForDate(user, dateKey, dayData.timeEntries, {
             dietasCount: dayData.dietasCount,
             isPernocta: dayData.isPernocta,
             vacationType: dayData.vacationType,
-            hourBreakdown: dayData.hourBreakdown,
-            totalEarnings: dayData.totalEarnings,
           });
         } catch (error) {
           console.error("Failed to sync day data to database:", error);
