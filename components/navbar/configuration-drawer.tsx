@@ -21,13 +21,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Settings } from "lucide-react";
-import { useConfigStore, useConfigActions, useInitializeConfig } from "./use-config-store";
-import { toast } from "sonner";
+import { useConfigActions, useConfigStore, useInitializeConfig } from "./use-config-store";
 
 function ConfigurationForm() {
   // Initialize config from database
   useInitializeConfig();
-  
+
   const {
     annualSalary,
     weeklyHours,
@@ -63,6 +62,22 @@ function ConfigurationForm() {
   } = useConfigActions();
 
   const normalRate = getNormalRate();
+
+  // Mapa de meses para evitar repetición
+  const monthsMap = [
+    { value: "1", label: "Enero" },
+    { value: "2", label: "Febrero" },
+    { value: "3", label: "Marzo" },
+    { value: "4", label: "Abril" },
+    { value: "5", label: "Mayo" },
+    { value: "6", label: "Junio" },
+    { value: "7", label: "Julio" },
+    { value: "8", label: "Agosto" },
+    { value: "9", label: "Septiembre" },
+    { value: "10", label: "Octubre" },
+    { value: "11", label: "Noviembre" },
+    { value: "12", label: "Diciembre" },
+  ];
 
   return (
     <div className="space-y-4">
@@ -115,7 +130,6 @@ function ConfigurationForm() {
       <Card className="py-0">
         <CardContent className="space-y-3 p-4">
           <h3 className="text-sm font-medium">Tarifas por Hora (€)</h3>
-
 
           <div className="space-y-2">
             <Label htmlFor="extra-rate" className="text-muted-foreground text-xs">
@@ -252,19 +266,19 @@ function ConfigurationForm() {
 
           {paymentType === "14" && (
             <div className="space-y-3">
-              <Label className="text-muted-foreground text-xs">
-                Meses de Segunda Paga
-              </Label>
+              <Label className="text-muted-foreground text-xs">Meses de Segunda Paga</Label>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="primera-paga-extra" className="text-muted-foreground text-xs">
                     Primera Paga Extra
                   </Label>
-                  <Select 
-                    value={segundaPagaMonths.split(",")[0] || "6"} 
+                  <Select
+                    value={segundaPagaMonths.split(",")[0] || "6"}
                     onValueChange={(value) => {
                       const months = segundaPagaMonths.split(",").filter(Boolean);
-                      const newMonths = [value, months[1] || "12"].sort((a, b) => parseInt(a) - parseInt(b));
+                      const newMonths = [value, months[1] || "12"].sort(
+                        (a, b) => parseInt(a) - parseInt(b)
+                      );
                       setSegundaPagaMonths(newMonths.join(","));
                     }}
                   >
@@ -272,18 +286,11 @@ function ConfigurationForm() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Enero</SelectItem>
-                      <SelectItem value="2">Febrero</SelectItem>
-                      <SelectItem value="3">Marzo</SelectItem>
-                      <SelectItem value="4">Abril</SelectItem>
-                      <SelectItem value="5">Mayo</SelectItem>
-                      <SelectItem value="6">Junio</SelectItem>
-                      <SelectItem value="7">Julio</SelectItem>
-                      <SelectItem value="8">Agosto</SelectItem>
-                      <SelectItem value="9">Septiembre</SelectItem>
-                      <SelectItem value="10">Octubre</SelectItem>
-                      <SelectItem value="11">Noviembre</SelectItem>
-                      <SelectItem value="12">Diciembre</SelectItem>
+                      {monthsMap.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -291,11 +298,13 @@ function ConfigurationForm() {
                   <Label htmlFor="segunda-paga-extra" className="text-muted-foreground text-xs">
                     Segunda Paga Extra
                   </Label>
-                  <Select 
-                    value={segundaPagaMonths.split(",")[1] || "12"} 
+                  <Select
+                    value={segundaPagaMonths.split(",")[1] || "12"}
                     onValueChange={(value) => {
                       const months = segundaPagaMonths.split(",").filter(Boolean);
-                      const newMonths = [months[0] || "6", value].sort((a, b) => parseInt(a) - parseInt(b));
+                      const newMonths = [months[0] || "6", value].sort(
+                        (a, b) => parseInt(a) - parseInt(b)
+                      );
                       setSegundaPagaMonths(newMonths.join(","));
                     }}
                   >
@@ -303,18 +312,11 @@ function ConfigurationForm() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Enero</SelectItem>
-                      <SelectItem value="2">Febrero</SelectItem>
-                      <SelectItem value="3">Marzo</SelectItem>
-                      <SelectItem value="4">Abril</SelectItem>
-                      <SelectItem value="5">Mayo</SelectItem>
-                      <SelectItem value="6">Junio</SelectItem>
-                      <SelectItem value="7">Julio</SelectItem>
-                      <SelectItem value="8">Agosto</SelectItem>
-                      <SelectItem value="9">Septiembre</SelectItem>
-                      <SelectItem value="10">Octubre</SelectItem>
-                      <SelectItem value="11">Noviembre</SelectItem>
-                      <SelectItem value="12">Diciembre</SelectItem>
+                      {monthsMap.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -342,11 +344,6 @@ function ConfigurationForm() {
 }
 
 export function ConfigurationDrawer() {
-  const handleSave = () => {
-    toast.success("Configuración guardada correctamente");
-    // The data is already being saved to the store through the onChange handlers
-  };
-
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -367,14 +364,7 @@ export function ConfigurationDrawer() {
 
             <div className="flex flex-col gap-2 pt-2">
               <DrawerClose asChild>
-                <Button className="w-full" onClick={handleSave}>
-                  Guardar Configuración
-                </Button>
-              </DrawerClose>
-              <DrawerClose asChild>
-                <Button variant="outline" className="w-full">
-                  Cancelar
-                </Button>
+                <Button className="w-full">Cerrar</Button>
               </DrawerClose>
             </div>
           </div>

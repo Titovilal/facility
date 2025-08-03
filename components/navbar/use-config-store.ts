@@ -102,7 +102,7 @@ export const useConfigStore = create<ConfigState>()(
           const config = await getOrCreateUserConfig(user);
           set({
             annualSalary: config.annualSalary,
-            weeklyHours: config.weeklyHours || "40",
+            weeklyHours: config.weeklyHours,
             paymentType: config.paymentType,
             extraRate: config.extraRate,
             saturdayRate: config.saturdayRate,
@@ -113,7 +113,7 @@ export const useConfigStore = create<ConfigState>()(
             hasPernocta: config.hasPernocta,
             pernoctaPrice: config.pernoctaPrice,
             maxVacationDays: config.maxVacationDays,
-            segundaPagaMonths: config.segundaPagaMonths || "6,12",
+            segundaPagaMonths: config.segundaPagaMonths,
             isInitialized: true,
           });
         } catch (error) {
