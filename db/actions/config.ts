@@ -31,13 +31,16 @@ export const createUserConfig = async (user: StackUser, data: ConfigInput): Prom
   const result = await db
     .insert(userConfig)
     .values({
-      ...getDefaultConfig(user, data)
+      ...getDefaultConfig(user, data),
     })
     .returning();
   return result[0];
 };
 
-const getDefaultConfig = (user: StackUser, data: ConfigInput): Omit<UserConfig, "id" | "createdAt" | "updatedAt"> => {
+const getDefaultConfig = (
+  user: StackUser,
+  data: ConfigInput
+): Omit<UserConfig, "id" | "createdAt" | "updatedAt"> => {
   return {
     userId: user.id,
     annualSalary: data.annualSalary ?? "0",

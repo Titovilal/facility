@@ -146,8 +146,8 @@ const formatDateKey = (date: Date): string => {
   }
   // Use UTC to avoid timezone issues when formatting dates
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -495,12 +495,23 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
                   dietasCount: dayDataFromEntries?.dietasCount ?? 0,
                   isPernocta: dayDataFromEntries?.isPernocta ?? false,
                   vacationType: dayDataFromEntries?.vacationType ?? "none",
-                  hourBreakdown: { normal: 0, saturday: 0, sunday: 0, pernocta: 0, extra: 0, total: 0 },
+                  hourBreakdown: {
+                    normal: 0,
+                    saturday: 0,
+                    sunday: 0,
+                    pernocta: 0,
+                    extra: 0,
+                    total: 0,
+                  },
                   totalEarnings: 0,
                 };
 
                 // Calculate hour breakdown and earnings
-                const hourBreakdown = get().calculateHourBreakdown(date, dayData.timeEntries, dayData.isPernocta);
+                const hourBreakdown = get().calculateHourBreakdown(
+                  date,
+                  dayData.timeEntries,
+                  dayData.isPernocta
+                );
                 const configState = useConfigStore.getState();
                 const rates = {
                   normal: configState.getNormalRate(),
@@ -510,7 +521,12 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
                   extra: parseFloat(configState.extraRate),
                   dieta: parseFloat(configState.dietaPrice),
                 };
-                const totalEarnings = get().calculateEarnings(hourBreakdown, dayData.dietasCount, rates, dayData.isPernocta);
+                const totalEarnings = get().calculateEarnings(
+                  hourBreakdown,
+                  dayData.dietasCount,
+                  rates,
+                  dayData.isPernocta
+                );
 
                 return {
                   dateKey,
@@ -605,7 +621,11 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
             };
 
             // Calculate hour breakdown and earnings
-            const hourBreakdown = get().calculateHourBreakdown(date, dayData.timeEntries, dayData.isPernocta);
+            const hourBreakdown = get().calculateHourBreakdown(
+              date,
+              dayData.timeEntries,
+              dayData.isPernocta
+            );
             const configState = useConfigStore.getState();
             const rates = {
               normal: configState.getNormalRate(),
@@ -615,7 +635,12 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
               extra: parseFloat(configState.extraRate),
               dieta: parseFloat(configState.dietaPrice),
             };
-            const totalEarnings = get().calculateEarnings(hourBreakdown, dayData.dietasCount, rates, dayData.isPernocta);
+            const totalEarnings = get().calculateEarnings(
+              hourBreakdown,
+              dayData.dietasCount,
+              rates,
+              dayData.isPernocta
+            );
 
             const finalDayData = {
               ...dayData,

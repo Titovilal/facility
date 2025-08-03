@@ -32,10 +32,10 @@ export const UserButton = ({ user, profile }: UserButtonProps) => {
   const [isLoadingReset, setIsLoadingReset] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  
+
   const stackUser = useUser();
   const initializeFromDatabase = useConfigStore((state) => state.initializeFromDatabase);
-  
+
   const name = user?.displayName || "";
   const avatarUrl = user?.profileImageUrl || "";
   const email = user?.primaryEmail || "";
@@ -102,21 +102,21 @@ export const UserButton = ({ user, profile }: UserButtonProps) => {
 
     try {
       setIsLoadingReset(true);
-      
+
       // Clear both stores from localStorage
       localStorage.removeItem("facility-config-storage");
       localStorage.removeItem("facility-time-entries-storage");
-      
+
       // Reset store states using the store's setState method
-      useTimeEntriesStore.setState({ 
-        monthlyData: {}, 
+      useTimeEntriesStore.setState({
+        monthlyData: {},
         loadedDates: new Set(),
-        selectedDate: new Date()
+        selectedDate: new Date(),
       });
-      
+
       // Reload configuration from database
       await initializeFromDatabase(stackUser);
-      
+
       toast.success("Data refreshed from database", {
         description: "All local data has been cleared and reloaded.",
       });
@@ -142,50 +142,54 @@ export const UserButton = ({ user, profile }: UserButtonProps) => {
       </DrawerTrigger>
 
       <DrawerContent className="fixed right-0 bottom-0 left-0 max-h-[60dvh]">
-        <DrawerTitle className="sr-only">User Menu</DrawerTitle>
+        <DrawerTitle className="sr-only">Menú de usuario</DrawerTitle>
         <ScrollArea className="overflow-auto p-4">
           <div className="space-y-4">
             <div className="text-center">
-              <h2 className="text-lg font-semibold">Account</h2>
+              <h2 className="text-lg font-semibold">Cuenta</h2>
             </div>
 
             {/* User Header */}
-            <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+            <div className="bg-muted/30 flex items-center gap-4 rounded-lg p-4">
               <Avatar className="h-12 w-12">
                 <AvatarImage src={avatarUrl} alt={name} />
                 <AvatarFallback className="font-medium">{initials}</AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{name}</p>
-                <p className="text-muted-foreground text-sm truncate">{email}</p>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{name}</p>
+                <p className="text-muted-foreground truncate text-sm">{email}</p>
               </div>
             </div>
 
             {/* Subscription Card */}
             {profile && (
-              <div className="p-4 rounded-lg border bg-card">
-                <div className="flex items-center justify-between mb-3">
+              <div className="bg-card rounded-lg border p-4">
+                <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${profile.hasSub ? 'bg-green-500' : 'bg-gray-400'}`} />
-                    <span className="text-sm font-medium">Subscription</span>
+                    <div
+                      className={`h-2 w-2 rounded-full ${profile.hasSub ? "bg-green-500" : "bg-gray-400"}`}
+                    />
+                    <span className="text-sm font-medium">Suscripción</span>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    profile.hasSub 
-                      ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
-                      : 'bg-gray-500/10 text-gray-600 dark:text-gray-400'
-                  }`}>
-                    {profile.hasSub ? 'Active' : 'Inactive'}
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs ${
+                      profile.hasSub
+                        ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                        : "bg-gray-500/10 text-gray-600 dark:text-gray-400"
+                    }`}
+                  >
+                    {profile.hasSub ? "Activa" : "Inactiva"}
                   </span>
                 </div>
-                
+
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Credits</span>
+                    <span className="text-muted-foreground">Créditos</span>
                     <span className="font-medium">{profile.subCredits}</span>
                   </div>
                   {profile.initialSubDate && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Since</span>
+                      <span className="text-muted-foreground">Desde</span>
                       <span className="font-medium">{formatDate(profile.initialSubDate)}</span>
                     </div>
                   )}
@@ -194,21 +198,27 @@ export const UserButton = ({ user, profile }: UserButtonProps) => {
             )}
 
             {/* Theme Toggle */}
-            <div 
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+            <div
+              className="hover:bg-muted/50 flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors"
               onClick={toggleTheme}
             >
               <div className="flex items-center gap-3">
                 {mounted && (
-                  <div className="relative w-4 h-4">
-                    <Sun className="absolute w-4 h-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                    <Moon className="absolute w-4 h-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+                  <div className="relative h-4 w-4">
+                    <Sun className="absolute h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+                    <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
                   </div>
                 )}
-                <span>Theme</span>
+                <span>Tema</span>
               </div>
-              <span className="text-sm text-muted-foreground capitalize">
-                {mounted ? theme : "system"}
+              <span className="text-muted-foreground text-sm capitalize">
+                {mounted
+                  ? theme === "dark"
+                    ? "oscuro"
+                    : theme === "light"
+                      ? "claro"
+                      : "sistema"
+                  : "sistema"}
               </span>
             </div>
 
@@ -217,43 +227,39 @@ export const UserButton = ({ user, profile }: UserButtonProps) => {
               <Link href="/handler/account-settings">
                 <Button variant="ghost" className="w-full justify-start">
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <span>Configuración</span>
                 </Button>
               </Link>
-              
+
               {profile?.customerId && (
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start" 
-                  onClick={openBillingPortal} 
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={openBillingPortal}
                   disabled={isLoadingPortal}
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  <span>{isLoadingPortal ? "Loading..." : "Billing Portal"}</span>
+                  <span>{isLoadingPortal ? "Cargando..." : "Portal de facturación"}</span>
                 </Button>
               )}
 
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start" 
-                onClick={clearStoresAndReload} 
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={clearStoresAndReload}
                 disabled={isLoadingReset}
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoadingReset ? "animate-spin" : ""}`} />
-                <span>{isLoadingReset ? "Refreshing..." : "Refresh Data"}</span>
+                <span>{isLoadingReset ? "Actualizando..." : "Actualizar datos"}</span>
               </Button>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-2 pt-2">
               <DrawerClose asChild>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => user?.signOut()}
-                >
+                <Button variant="outline" className="w-full" onClick={() => user?.signOut()}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
+                  Cerrar sesión
                 </Button>
               </DrawerClose>
             </div>

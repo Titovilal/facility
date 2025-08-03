@@ -10,8 +10,8 @@ const formatDateKey = (date: Date): string => {
   }
   // Use UTC to avoid timezone issues when formatting dates
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -33,7 +33,7 @@ export const useLoadMonthData = (year: number, month: number) => {
         // Log de los días y total de dinero de ese mes
         setTimeout(() => {
           const daysInMonth = new Date(year, month + 1, 0).getDate();
-          const dias: { dia: string, total: number }[] = [];
+          const dias: { dia: string; total: number }[] = [];
           for (let d = 1; d <= daysInMonth; d++) {
             const date = new Date(year, month, d);
             const dayData = getDayData(date);
@@ -45,10 +45,10 @@ export const useLoadMonthData = (year: number, month: number) => {
           const totalMes = getMonthlyEarnings(year, month);
           // Console log bonito
           console.log(
-            `%cResumen del mes ${year}-${String(month + 1).padStart(2, '0')}`,
+            `%cResumen del mes ${year}-${String(month + 1).padStart(2, "0")}`,
             "color: #fff; background: #007acc; font-weight: bold; padding: 2px 8px; border-radius: 4px;"
           );
-          dias.forEach(d =>
+          dias.forEach((d) =>
             console.log(
               `%c${d.dia}: %c${d.total.toFixed(2)} €`,
               "color: #007acc; font-weight: bold;",

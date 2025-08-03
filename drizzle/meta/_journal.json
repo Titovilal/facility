@@ -43,6 +43,13 @@
       "when": 1753538984136,
       "tag": "0005_chief_spyke",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1754235352300,
+      "tag": "0006_ancient_gideon",
+      "breakpoints": true
     }
   ]
 }

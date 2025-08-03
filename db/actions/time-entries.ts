@@ -122,7 +122,7 @@ export const syncTimeEntriesForDate = async (
 // Helper function to get day data from time entries
 export const getDayDataFromEntries = (entries: TimeEntry[]) => {
   if (entries.length === 0) return null;
-  
+
   // All entries for a date should have the same day-level data
   const firstEntry = entries[0];
   return {

@@ -97,13 +97,18 @@ function Calendar({
 
       // Handle deselection: if clicking the same date that's already selected, deselect it
       if (selected && selectedDay) {
-        const currentSelected = Array.isArray(selected) ? selected[0] : 
-          (typeof selected === "object" && "from" in selected) ? selected.from : selected;
-        
-        if (currentSelected && 
-            currentSelected.getDate() === selectedDay.getDate() &&
-            currentSelected.getMonth() === selectedDay.getMonth() &&
-            currentSelected.getFullYear() === selectedDay.getFullYear()) {
+        const currentSelected = Array.isArray(selected)
+          ? selected[0]
+          : typeof selected === "object" && "from" in selected
+            ? selected.from
+            : selected;
+
+        if (
+          currentSelected &&
+          currentSelected.getDate() === selectedDay.getDate() &&
+          currentSelected.getMonth() === selectedDay.getMonth() &&
+          currentSelected.getFullYear() === selectedDay.getFullYear()
+        ) {
           onSelect(undefined);
           return;
         }
@@ -256,8 +261,8 @@ function CalendarDayButton({
     }
     // Use UTC to avoid timezone issues when formatting dates
     const year = day.date.getFullYear();
-    const month = String(day.date.getMonth() + 1).padStart(2, '0');
-    const dayStr = String(day.date.getDate()).padStart(2, '0');
+    const month = String(day.date.getMonth() + 1).padStart(2, "0");
+    const dayStr = String(day.date.getDate()).padStart(2, "0");
     return `${year}-${month}-${dayStr}`;
   }, [day.date]);
 

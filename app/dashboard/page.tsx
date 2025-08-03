@@ -66,7 +66,6 @@ export default function DashboardPage() {
   }, [user, router]);
   if (!user) return null;
 
-
   return (
     <div className="bg-background min-h-screen">
       <Navbar profile={profile} user={user} />
@@ -302,10 +301,7 @@ export default function DashboardPage() {
                       <div className="flex justify-between border-t pt-2 font-semibold">
                         <span>Total</span>
                         <div className="flex flex-col items-end">
-                          <span>
-                            {totalAllowancesCount}{" "}
-                            complementos
-                          </span>
+                          <span>{totalAllowancesCount} complementos</span>
                           <span className="text-xs font-medium text-green-600">
                             €{totalAllowances.toFixed(2)}
                           </span>
@@ -377,19 +373,14 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex justify-between pt-1">
                       <span className="text-muted-foreground text-xs">
-                        {isObjectiveMet
-                          ? "✓ Objetivo alcanzado"
-                          : "⚠ Por debajo del objetivo"}
+                        {isObjectiveMet ? "✓ Objetivo alcanzado" : "⚠ Por debajo del objetivo"}
                       </span>
                       <span
                         className={`text-xs font-medium ${
-                          isObjectiveMet
-                            ? "text-green-600"
-                            : "text-orange-600"
+                          isObjectiveMet ? "text-green-600" : "text-orange-600"
                         }`}
                       >
-                        {isObjectiveMet ? "+" : ""}€
-                        {earningsDifference.toFixed(2)}
+                        {isObjectiveMet ? "+" : ""}€{earningsDifference.toFixed(2)}
                       </span>
                     </div>
                   </div>

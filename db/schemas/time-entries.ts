@@ -1,14 +1,6 @@
 import { InferSelectModel } from "drizzle-orm";
 import { authenticatedRole, authUid, crudPolicy } from "drizzle-orm/neon";
-import {
-  boolean,
-  index,
-  integer,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 // Enum for vacation types
 export const vacationTypeEnum = pgEnum("vacation_type", ["none", "full_day", "half_day"]);
