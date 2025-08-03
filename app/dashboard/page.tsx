@@ -1,12 +1,9 @@
 "use client";
 
 import { TimeRegistrationDrawer } from "@/components/dashboard/time-registration-drawer";
-import {
-  useLoadMonthData,
-  useTimeEntriesStore,
-} from "@/components/dashboard/use-time-entries-store";
+import { useDateManagement, useDashboardData } from "@/components/dashboard/use-time-entries";
 import { Navbar } from "@/components/navbar/navbar";
-import { useConfigStore, useInitializeConfig } from "@/components/navbar/use-config-store";
+import { useInitializeConfig } from "@/components/navbar/use-config-store";
 import { Calendar } from "@/components/ui/calendar";
 import { getOrCreateProfile } from "@/db/actions/profiles";
 import type { Profile } from "@/db/schemas/profiles";
@@ -21,79 +18,30 @@ export default function DashboardPage() {
   const user = useUser();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showHours, setShowHours] = useState(false);
-  const [displayedMonth, setDisplayedMonth] = useState(new Date());
   const router = useRouter();
 
   // Initialize stores with database data
   useInitializeConfig();
 
-  // Configuration store
+  // Date management
+  const { selectedDate, setSelectedDate, displayedMonth, setDisplayedMonth } = useDateManagement();
+
+  // Dashboard data calculations
   const {
-    annualSalary,
-    paymentType,
-    segundaPagaMonths,
-    extraRate,
-    saturdayRate,
-    sundayRate,
-    hasDieta,
-    dietaPrice,
-    hasPernocta,
-    pernoctaPrice,
-    getNormalRate,
-  } = useConfigStore();
-
-  // Function to calculate minimum expected monthly income for displayed month
-  const calculateMinimumMonthlyIncome = () => {
-    const salary = parseFloat(annualSalary) || 0;
-    const payments = parseFloat(paymentType) || 12;
-    const baseMonthlyIncome = salary / payments;
-
-    // Check if displayed month is a segunda paga month
-    const displayedMonthNumber = (displayedMonth.getMonth() + 1).toString();
-    const extraPayMonths = segundaPagaMonths.split(",").filter(Boolean);
-    const isExtraPayMonth = extraPayMonths.includes(displayedMonthNumber);
-
-    return isExtraPayMonth ? baseMonthlyIncome * 2 : baseMonthlyIncome;
-  };
-
-  // Zustand stores
-  const {
-    selectedDate,
-    setSelectedDate,
-    getDayData,
-    getMonthlyHours,
-    getMonthlyEarnings,
-    getMonthlyDietas,
-    getMonthlyPernocta,
-    getMonthlyVacationStats,
-  } = useTimeEntriesStore();
-
-  // Get displayed month/year for summary calculations
-  const displayedYear = displayedMonth.getFullYear();
-  const displayedMonthIndex = displayedMonth.getMonth();
-
-  // Load time entries data from database for displayed month
-  useLoadMonthData(displayedYear, displayedMonthIndex);
-
-  // Get current day data - ensure selectedDate is a valid Date
-  const currentDayData =
-    selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime())
-      ? getDayData(selectedDate)
-      : null;
-
-  // Initialize selectedDate if it's not valid
-  useEffect(() => {
-    if (!selectedDate || !(selectedDate instanceof Date) || isNaN(selectedDate.getTime())) {
-      setSelectedDate(new Date());
-    }
-  }, [selectedDate, setSelectedDate]);
-
-  // Update displayed month when selectedDate changes (for initial load)
-  useEffect(() => {
-    if (selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime())) {
-      setDisplayedMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
-    }
-  }, [selectedDate]);
+    currentDayData,
+    monthlyHours,
+    monthlyEarnings,
+    monthlyDietas,
+    monthlyPernocta,
+    monthlyVacations,
+    minimumExpectedIncome,
+    isObjectiveMet,
+    earningsDifference,
+    totalHoursEarnings,
+    totalAllowances,
+    totalAllowancesCount,
+    configData,
+  } = useDashboardData(displayedMonth);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -118,13 +66,6 @@ export default function DashboardPage() {
   }, [user, router]);
   if (!user) return null;
 
-  // Get monthly summary for displayed month
-  const monthlyHours = getMonthlyHours(displayedYear, displayedMonthIndex);
-  const monthlyEarnings = getMonthlyEarnings(displayedYear, displayedMonthIndex);
-  const monthlyDietas = getMonthlyDietas(displayedYear, displayedMonthIndex);
-  const monthlyPernocta = getMonthlyPernocta(displayedYear, displayedMonthIndex);
-  const monthlyVacations = getMonthlyVacationStats(displayedYear, displayedMonthIndex);
-  const minimumExpectedIncome = calculateMinimumMonthlyIncome();
 
   return (
     <div className="bg-background min-h-screen">
@@ -232,11 +173,11 @@ export default function DashboardPage() {
                         <span className="font-medium">
                           {monthlyHours.normal.toFixed(1)}h{" "}
                           <span className="text-muted-foreground text-xs">
-                            (€{getNormalRate().toFixed(2)}/h)
+                            (€{configData.getNormalRate().toFixed(2)}/h)
                           </span>
                         </span>
                         <span className="text-xs font-medium text-green-600">
-                          €{(monthlyHours.normal * getNormalRate()).toFixed(2)}
+                          €{(monthlyHours.normal * configData.getNormalRate()).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -246,11 +187,11 @@ export default function DashboardPage() {
                         <span className="font-medium">
                           {monthlyHours.extra.toFixed(1)}h{" "}
                           <span className="text-muted-foreground text-xs">
-                            (€{parseFloat(extraRate) || 0}/h)
+                            (€{configData.extraRate}/h)
                           </span>
                         </span>
                         <span className="text-xs font-medium text-green-600">
-                          €{(monthlyHours.extra * (parseFloat(extraRate) || 0)).toFixed(2)}
+                          €{(monthlyHours.extra * configData.extraRate).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -260,11 +201,11 @@ export default function DashboardPage() {
                         <span className="font-medium">
                           {monthlyHours.saturday.toFixed(1)}h{" "}
                           <span className="text-muted-foreground text-xs">
-                            (€{parseFloat(saturdayRate) || 0}/h)
+                            (€{configData.saturdayRate}/h)
                           </span>
                         </span>
                         <span className="text-xs font-medium text-green-600">
-                          €{(monthlyHours.saturday * (parseFloat(saturdayRate) || 0)).toFixed(2)}
+                          €{(monthlyHours.saturday * configData.saturdayRate).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -274,11 +215,11 @@ export default function DashboardPage() {
                         <span className="font-medium">
                           {monthlyHours.sunday.toFixed(1)}h{" "}
                           <span className="text-muted-foreground text-xs">
-                            (€{parseFloat(sundayRate) || 0}/h)
+                            (€{configData.sundayRate}/h)
                           </span>
                         </span>
                         <span className="text-xs font-medium text-green-600">
-                          €{(monthlyHours.sunday * (parseFloat(sundayRate) || 0)).toFixed(2)}
+                          €{(monthlyHours.sunday * configData.sundayRate).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -293,14 +234,14 @@ export default function DashboardPage() {
                             ).toFixed(1)}
                             h{" "}
                             <span className="text-muted-foreground text-xs">
-                              (€{getNormalRate().toFixed(2)}/h)
+                              (€{configData.getNormalRate().toFixed(2)}/h)
                             </span>
                           </span>
                           <span className="text-xs font-medium text-green-600">
                             €
                             {(
                               (monthlyVacations.fullDays * 8 + monthlyVacations.halfDays * 4) *
-                              getNormalRate()
+                              configData.getNormalRate()
                             ).toFixed(2)}
                           </span>
                         </div>
@@ -311,15 +252,7 @@ export default function DashboardPage() {
                       <div className="flex flex-col items-end">
                         <span>{monthlyHours.total.toFixed(1)}h</span>
                         <span className="text-xs font-medium text-green-600">
-                          €
-                          {(
-                            monthlyHours.normal * getNormalRate() +
-                            monthlyHours.extra * (parseFloat(extraRate) || 0) +
-                            monthlyHours.saturday * (parseFloat(saturdayRate) || 0) +
-                            monthlyHours.sunday * (parseFloat(sundayRate) || 0) +
-                            (monthlyVacations.fullDays * 8 + monthlyVacations.halfDays * 4) *
-                              getNormalRate()
-                          ).toFixed(2)}
+                          €{totalHoursEarnings.toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -327,21 +260,21 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Allowances Card - Only shown if at least one of hasDieta or hasPernocta is true */}
-                {(hasDieta || hasPernocta) && (
+                {(configData.hasDieta || configData.hasPernocta) && (
                   <div className="bg-card rounded-lg border p-4">
                     <div className="mb-3 flex items-center gap-2">
                       <Euro className="h-4 w-4 text-orange-500" />
                       <span className="text-sm font-medium">Complementos</span>
                     </div>
                     <div className="space-y-2 text-sm">
-                      {hasDieta && (
+                      {configData.hasDieta && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Dietas</span>
                           <div className="flex flex-col items-end">
                             <span className="font-medium">
                               {monthlyDietas.count}{" "}
                               <span className="text-muted-foreground text-xs">
-                                (€{parseFloat(dietaPrice) || 0}/u)
+                                (€{configData.dietaPrice}/u)
                               </span>
                             </span>
                             <span className="text-xs font-medium text-green-600">
@@ -350,14 +283,14 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       )}
-                      {hasPernocta && (
+                      {configData.hasPernocta && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Noches</span>
                           <div className="flex flex-col items-end">
                             <span className="font-medium">
                               {monthlyPernocta.count}{" "}
                               <span className="text-muted-foreground text-xs">
-                                (€{parseFloat(pernoctaPrice) || 0}/u)
+                                (€{configData.pernoctaPrice}/u)
                               </span>
                             </span>
                             <span className="text-xs font-medium text-green-600">
@@ -370,16 +303,11 @@ export default function DashboardPage() {
                         <span>Total</span>
                         <div className="flex flex-col items-end">
                           <span>
-                            {(hasDieta ? monthlyDietas.count : 0) +
-                              (hasPernocta ? monthlyPernocta.count : 0)}{" "}
+                            {totalAllowancesCount}{" "}
                             complementos
                           </span>
                           <span className="text-xs font-medium text-green-600">
-                            €
-                            {(
-                              (hasDieta ? monthlyDietas.totalCost : 0) +
-                              (hasPernocta ? monthlyPernocta.totalCost : 0)
-                            ).toFixed(2)}
+                            €{totalAllowances.toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -418,7 +346,7 @@ export default function DashboardPage() {
                           <span className="text-muted-foreground text-xs">
                             Fechas:{" "}
                             {monthlyVacations.vacationDays
-                              .map((day) => {
+                              .map((day: { date: string }) => {
                                 const date = new Date(day.date);
                                 return date.getDate();
                               })
@@ -449,19 +377,19 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex justify-between pt-1">
                       <span className="text-muted-foreground text-xs">
-                        {monthlyEarnings >= minimumExpectedIncome
+                        {isObjectiveMet
                           ? "✓ Objetivo alcanzado"
                           : "⚠ Por debajo del objetivo"}
                       </span>
                       <span
                         className={`text-xs font-medium ${
-                          monthlyEarnings >= minimumExpectedIncome
+                          isObjectiveMet
                             ? "text-green-600"
                             : "text-orange-600"
                         }`}
                       >
-                        {monthlyEarnings >= minimumExpectedIncome ? "+" : ""}€
-                        {(monthlyEarnings - minimumExpectedIncome).toFixed(2)}
+                        {isObjectiveMet ? "+" : ""}€
+                        {earningsDifference.toFixed(2)}
                       </span>
                     </div>
                   </div>

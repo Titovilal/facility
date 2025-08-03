@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  clearDayData as dbClearDayData,
   getDailyData,
   getTimeEntriesForDate,
   syncTimeEntriesForDate,
   upsertDailyData,
 } from "@/db/actions/time-entries";
-import { useUser } from "@stackframe/stack";
-import React from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useConfigStore } from "../navbar/use-config-store";
@@ -148,7 +145,11 @@ const formatDateKey = (date: Date): string => {
   if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
     throw new Error("Invalid date provided to formatDateKey");
   }
-  return date.toISOString().split("T")[0];
+  // Use UTC to avoid timezone issues when formatting dates
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const defaultDayData = (date: Date): DayData => ({
@@ -434,12 +435,12 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
         // Get current rates from config store
         const configState = useConfigStore.getState();
         const rates = {
-          normal: configState.getNormalRate() || 15.6,
-          saturday: parseFloat(configState.saturdayRate) || 23.4,
-          sunday: parseFloat(configState.sundayRate) || 31.2,
-          pernocta: parseFloat(configState.pernoctaPrice) || 23.4,
-          extra: parseFloat(configState.extraRate) || 23.4,
-          dieta: parseFloat(configState.dietaPrice) || 5.0,
+          normal: configState.getNormalRate(),
+          saturday: parseFloat(configState.saturdayRate),
+          sunday: parseFloat(configState.sundayRate),
+          pernocta: parseFloat(configState.pernoctaPrice),
+          extra: parseFloat(configState.extraRate),
+          dieta: parseFloat(configState.dietaPrice),
         };
 
         const totalEarnings = get().calculateEarnings(
@@ -856,81 +857,3 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
     }
   )
 );
-
-// Hook to load month data from database when needed
-export const useLoadMonthData = (year: number, month: number) => {
-  const user = useUser();
-  const loadMonthFromDatabase = useTimeEntriesStore((state) => state.loadMonthFromDatabase);
-  const isLoading = useTimeEntriesStore((state) => state.isLoading);
-  const [loadedMonths, setLoadedMonths] = React.useState<Set<string>>(new Set());
-
-  React.useEffect(() => {
-    if (user) {
-      const monthKey = `${year}-${month}`;
-      if (!loadedMonths.has(monthKey)) {
-        loadMonthFromDatabase(user, year, month);
-        setLoadedMonths((prev) => new Set(prev).add(monthKey));
-      }
-    }
-  }, [user, year, month, loadMonthFromDatabase, loadedMonths]);
-
-  return isLoading;
-};
-
-// Hook to load day data from database when needed
-export const useLoadDayData = (date: Date | undefined) => {
-  const user = useUser();
-  const loadDayFromDatabase = useTimeEntriesStore((state) => state.loadDayFromDatabase);
-  const isLoading = useTimeEntriesStore((state) => state.isLoading);
-  const loadedDates = useTimeEntriesStore((state) => state.loadedDates);
-
-  React.useEffect(() => {
-    if (user && date) {
-      const dateKey = formatDateKey(date);
-      const loadedDatesSet = loadedDates instanceof Set ? loadedDates : new Set();
-      if (!loadedDatesSet.has(dateKey)) {
-        loadDayFromDatabase(user, date);
-      }
-    }
-  }, [user, date, loadedDates, loadDayFromDatabase]);
-
-  return isLoading;
-};
-
-// Hook for time entries actions with database sync
-export const useTimeEntriesActions = () => {
-  const user = useUser();
-  const store = useTimeEntriesStore();
-
-  const createSyncedAction = (action: (date: Date, ...args: any[]) => void) => {
-    return (date: Date, ...args: any[]) => {
-      action(date, ...args);
-      if (user) {
-        // Debounced sync to avoid too many database calls
-        setTimeout(() => {
-          store.syncDayToDatabase(user, date);
-        }, 500);
-      }
-    };
-  };
-
-  return {
-    setTimeEntries: createSyncedAction(store.setTimeEntries),
-    addTimeEntry: createSyncedAction(store.addTimeEntry),
-    removeTimeEntry: createSyncedAction(store.removeTimeEntry),
-    updateTimeEntry: createSyncedAction(store.updateTimeEntry),
-    setDietasCount: createSyncedAction(store.setDietasCount),
-    setIsPernocta: createSyncedAction(store.setIsPernocta),
-    setVacationType: createSyncedAction(store.setVacationType),
-    clearDayData: async (date: Date) => {
-      if (user) {
-        try {
-          await dbClearDayData(user, formatDateKey(date));
-        } catch (error) {
-          console.error("Failed to clear day data from database:", error);
-        }
-      }
-      store.clearDayData(date);
-    },
-  };
-};

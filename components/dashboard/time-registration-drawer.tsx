@@ -19,7 +19,8 @@ import { useConfigStore } from "../navbar/use-config-store";
 import { DietasCounter } from "./dietas-counter";
 import { HourBreakdownCard } from "./hour-breakdown-card";
 import { TimeEntry } from "./time-entry";
-import { useTimeEntriesActions, useTimeEntriesStore } from "./use-time-entries-store";
+import { useTimeEntriesActions } from "./use-time-entries";
+import { useTimeEntriesStore } from "./use-time-entries-store";
 
 interface TimeRegistrationDrawerProps {
   date: Date;

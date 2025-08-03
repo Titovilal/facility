@@ -95,9 +95,18 @@ function Calendar({
         return;
       }
 
-      // If we're trying to deselect the current selection, ignore it
-      if (!selectedDay && selected) {
-        return;
+      // Handle deselection: if clicking the same date that's already selected, deselect it
+      if (selected && selectedDay) {
+        const currentSelected = Array.isArray(selected) ? selected[0] : 
+          (typeof selected === "object" && "from" in selected) ? selected.from : selected;
+        
+        if (currentSelected && 
+            currentSelected.getDate() === selectedDay.getDate() &&
+            currentSelected.getMonth() === selectedDay.getMonth() &&
+            currentSelected.getFullYear() === selectedDay.getFullYear()) {
+          onSelect(undefined);
+          return;
+        }
       }
 
       // Handle the case based on mode
@@ -241,7 +250,15 @@ function CalendarDayButton({
 
   // Create a stable selector that only re-renders when the specific day's data changes
   const dateKey = React.useMemo(() => {
-    return day.date.toISOString().split("T")[0];
+    // Use the same formatDateKey logic as in the store to ensure consistency
+    if (!day.date || !(day.date instanceof Date) || isNaN(day.date.getTime())) {
+      throw new Error("Invalid date provided to formatDateKey");
+    }
+    // Use UTC to avoid timezone issues when formatting dates
+    const year = day.date.getFullYear();
+    const month = String(day.date.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(day.date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${dayStr}`;
   }, [day.date]);
 
   const dayData = useTimeEntriesStore(

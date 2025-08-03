@@ -13,11 +13,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { StackUser } from "@/db/db";
 import { Profile } from "@/db/schemas/profiles";
 import { formatDate } from "@/lib/utils";
-import { CreditCard, LogOut, Moon, Settings, Sun } from "lucide-react";
+import { CreditCard, LogOut, Moon, Settings, Sun, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
+import { useConfigStore } from "./use-config-store";
+import { useTimeEntriesStore } from "../dashboard/use-time-entries-store";
+import { useUser } from "@stackframe/stack";
 
 interface UserButtonProps {
   user: StackUser;
@@ -26,8 +29,12 @@ interface UserButtonProps {
 
 export const UserButton = ({ user, profile }: UserButtonProps) => {
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [isLoadingReset, setIsLoadingReset] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  
+  const stackUser = useUser();
+  const initializeFromDatabase = useConfigStore((state) => state.initializeFromDatabase);
   
   const name = user?.displayName || "";
   const avatarUrl = user?.profileImageUrl || "";
@@ -83,6 +90,43 @@ export const UserButton = ({ user, profile }: UserButtonProps) => {
       });
     } finally {
       setIsLoadingPortal(false);
+    }
+  };
+
+  // Function to clear stores and reload from database
+  const clearStoresAndReload = async () => {
+    if (!stackUser) {
+      toast.error("User not authenticated");
+      return;
+    }
+
+    try {
+      setIsLoadingReset(true);
+      
+      // Clear both stores from localStorage
+      localStorage.removeItem("facility-config-storage");
+      localStorage.removeItem("facility-time-entries-storage");
+      
+      // Reset store states using the store's setState method
+      useTimeEntriesStore.setState({ 
+        monthlyData: {}, 
+        loadedDates: new Set(),
+        selectedDate: new Date()
+      });
+      
+      // Reload configuration from database
+      await initializeFromDatabase(stackUser);
+      
+      toast.success("Data refreshed from database", {
+        description: "All local data has been cleared and reloaded.",
+      });
+    } catch (error) {
+      console.error("Error clearing stores and reloading:", error);
+      toast.error("Failed to refresh data", {
+        description: "Please try again later.",
+      });
+    } finally {
+      setIsLoadingReset(false);
     }
   };
 
@@ -188,6 +232,16 @@ export const UserButton = ({ user, profile }: UserButtonProps) => {
                   <span>{isLoadingPortal ? "Loading..." : "Billing Portal"}</span>
                 </Button>
               )}
+
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start" 
+                onClick={clearStoresAndReload} 
+                disabled={isLoadingReset}
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${isLoadingReset ? "animate-spin" : ""}`} />
+                <span>{isLoadingReset ? "Refreshing..." : "Refresh Data"}</span>
+              </Button>
             </div>
 
             {/* Action Buttons */}
