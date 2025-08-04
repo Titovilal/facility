@@ -694,6 +694,29 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
             isPernocta: dayData.isPernocta,
             vacationType: dayData.vacationType,
           });
+
+          // Update the store to mark this date as loaded/synced and recalculate
+          set((state) => {
+            const currentLoadedDates =
+              state.loadedDates instanceof Set ? state.loadedDates : new Set<string>();
+            const newLoadedDates = new Set<string>();
+            currentLoadedDates.forEach((date) => newLoadedDates.add(String(date)));
+            newLoadedDates.add(dateKey);
+
+            return {
+              ...state,
+              monthlyData: {
+                ...state.monthlyData,
+                [dateKey]: {
+                  ...dayData,
+                },
+              },
+              loadedDates: newLoadedDates,
+            };
+          });
+
+          // Force recalculation of day data after sync
+          get().updateDayCalculations(date);
         } catch (error) {
           console.error("Failed to sync day data to database:", error);
         }
@@ -710,16 +733,27 @@ export const useTimeEntriesStore = create<TimeEntriesState>()(
           total: 0,
         };
 
+        let vacationHours = 0;
+
         Object.values(state.monthlyData).forEach((dayData) => {
           const dayDate = new Date(dayData.date);
           if (dayDate.getFullYear() === year && dayDate.getMonth() === month) {
-            // Include all days including vacation days in the hour counts
-            Object.keys(monthlyBreakdown).forEach((key) => {
-              const value = dayData.hourBreakdown[key as keyof HourBreakdown];
-              monthlyBreakdown[key as keyof HourBreakdown] += isNaN(value) ? 0 : value;
-            });
+            if (dayData.vacationType === "none") {
+              // Only include hours from non-vacation days in the work hour counts
+              Object.keys(monthlyBreakdown).forEach((key) => {
+                const value = dayData.hourBreakdown[key as keyof HourBreakdown];
+                monthlyBreakdown[key as keyof HourBreakdown] += isNaN(value) ? 0 : value;
+              });
+            } else {
+              // Add vacation hours to the total count
+              const dayVacationHours = dayData.hourBreakdown.total || 0;
+              vacationHours += isNaN(dayVacationHours) ? 0 : dayVacationHours;
+            }
           }
         });
+
+        // Include vacation hours in the total
+        monthlyBreakdown.total += vacationHours;
 
         return monthlyBreakdown;
       },

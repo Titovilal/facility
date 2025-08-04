@@ -12,9 +12,7 @@ import {
 } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useUser } from "@stackframe/stack";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
 import { useConfigStore } from "../navbar/use-config-store";
 import { DietasCounter } from "./dietas-counter";
 import { HourBreakdownCard } from "./hour-breakdown-card";
@@ -28,13 +26,11 @@ interface TimeRegistrationDrawerProps {
 }
 
 export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawerProps) {
-  const user = useUser();
-
   // Get current rates from config store
   const { pernoctaPrice, hasDieta, hasPernocta } = useConfigStore();
 
   // Get day data from store
-  const { getDayData, syncDayToDatabase } = useTimeEntriesStore();
+  const { getDayData } = useTimeEntriesStore();
   const {
     addTimeEntry,
     removeTimeEntry,
@@ -42,7 +38,6 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
     setDietasCount,
     setIsPernocta,
     setVacationType,
-    clearDayData,
   } = useTimeEntriesActions();
 
   const dayData = getDayData(date);
@@ -64,38 +59,6 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
   const effectiveDietasCount = hasDieta ? dietasCount : 0;
   const effectiveIsPernocta = hasPernocta ? isPernocta : false;
 
-  const handleSave = async () => {
-    // Validate that at least one time entry has both start and end times
-    const hasValidEntry = timeEntries.some((entry) => entry.startTime && entry.endTime);
-
-    if (!hasValidEntry) {
-      toast.error("Por favor, completa al menos un período de trabajo");
-      return;
-    }
-
-    // Immediately sync to database
-    if (user) {
-      try {
-        await syncDayToDatabase(user, date);
-        toast.success("Horas guardadas correctamente");
-      } catch (error) {
-        toast.error("Error al guardar en la base de datos");
-        console.error("Failed to save to database:", error);
-      }
-    } else {
-      toast.success("Horas guardadas correctamente");
-    }
-  };
-
-  const handleClearDay = async () => {
-    try {
-      await clearDayData(date);
-      toast.success("Día limpiado correctamente");
-    } catch (error) {
-      toast.error("Error al limpiar en la base de datos");
-      console.error("Failed to clear in database:", error);
-    }
-  };
   return (
     <Drawer>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
@@ -197,19 +160,7 @@ export function TimeRegistrationDrawer({ date, children }: TimeRegistrationDrawe
             {/* Action Buttons */}
             <div className="flex flex-col gap-2 pt-2">
               <DrawerClose asChild>
-                <Button className="w-full" onClick={handleSave}>
-                  Guardar Horas
-                </Button>
-              </DrawerClose>
-              <DrawerClose asChild>
-                <Button variant="destructive" className="w-full" onClick={handleClearDay}>
-                  Limpiar Día
-                </Button>
-              </DrawerClose>
-              <DrawerClose asChild>
-                <Button variant="outline" className="w-full">
-                  Cancelar
-                </Button>
+                <Button className="w-full">Cerrar</Button>
               </DrawerClose>
             </div>
           </div>

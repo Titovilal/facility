@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { clearDayData as dbClearDayData } from "@/db/actions/time-entries";
 import { useUser } from "@stackframe/stack";
-import React from "react";
+import React, { useEffect } from "react";
 import { useConfigStore } from "../navbar/use-config-store";
 import { useTimeEntriesStore } from "./use-time-entries-store";
 
@@ -30,37 +31,6 @@ export const useLoadMonthData = (year: number, month: number) => {
       if (!loadedMonths.has(monthKey)) {
         loadMonthFromDatabase(user, year, month);
         setLoadedMonths((prev) => new Set(prev).add(monthKey));
-        // Log de los días y total de dinero de ese mes
-        setTimeout(() => {
-          const daysInMonth = new Date(year, month + 1, 0).getDate();
-          const dias: { dia: string; total: number }[] = [];
-          for (let d = 1; d <= daysInMonth; d++) {
-            const date = new Date(year, month, d);
-            const dayData = getDayData(date);
-            dias.push({
-              dia: formatDateKey(date),
-              total: dayData?.totalEarnings ?? 0,
-            });
-          }
-          const totalMes = getMonthlyEarnings(year, month);
-          // Console log bonito
-          console.log(
-            `%cResumen del mes ${year}-${String(month + 1).padStart(2, "0")}`,
-            "color: #fff; background: #007acc; font-weight: bold; padding: 2px 8px; border-radius: 4px;"
-          );
-          dias.forEach((d) =>
-            console.log(
-              `%c${d.dia}: %c${d.total.toFixed(2)} €`,
-              "color: #007acc; font-weight: bold;",
-              "color: #43a047; font-weight: bold;"
-            )
-          );
-          console.log(
-            `%cTotal mes: %c${totalMes.toFixed(2)} €`,
-            "color: #fff; background: #43a047; font-weight: bold; padding: 2px 8px; border-radius: 4px;",
-            "color: #fff; background: #007acc; font-weight: bold; padding: 2px 8px; border-radius: 4px;"
-          );
-        }, 800); // Espera a que se cargue el mes
       }
     }
   }, [user, year, month, loadMonthFromDatabase, loadedMonths, getMonthlyEarnings, getDayData]);
@@ -75,7 +45,7 @@ export const useLoadDayData = (date: Date | undefined) => {
   const isLoading = useTimeEntriesStore((state) => state.isLoading);
   const loadedDates = useTimeEntriesStore((state) => state.loadedDates);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user && date) {
       const dateKey = formatDateKey(date);
       const loadedDatesSet = loadedDates instanceof Set ? loadedDates : new Set();
@@ -163,6 +133,7 @@ export const useDashboardData = (displayedMonth: Date) => {
     getMonthlyDietas,
     getMonthlyPernocta,
     getMonthlyVacationStats,
+    monthlyData, // Add this to force re-computation when data changes
   } = useTimeEntriesStore();
 
   const {
@@ -206,30 +177,69 @@ export const useDashboardData = (displayedMonth: Date) => {
       : null;
   }, [selectedDate, getDayData]);
 
+  // Get relevant month data for dependencies
+  const relevantMonthData = React.useMemo(() => {
+    return Object.values(monthlyData).filter((dayData) => {
+      const dayDate = new Date(dayData.date);
+      return dayDate.getFullYear() === displayedYear && dayDate.getMonth() === displayedMonthIndex;
+    });
+  }, [monthlyData, displayedYear, displayedMonthIndex]);
+
+  // Create dependency strings for proper memoization
+  const hoursDepString = React.useMemo(
+    () =>
+      JSON.stringify(
+        relevantMonthData.map((d) => ({ date: d.date, total: d.hourBreakdown.total }))
+      ),
+    [relevantMonthData]
+  );
+
+  const earningsDepString = React.useMemo(
+    () =>
+      JSON.stringify(relevantMonthData.map((d) => ({ date: d.date, earnings: d.totalEarnings }))),
+    [relevantMonthData]
+  );
+
+  const dietasDepString = React.useMemo(
+    () => JSON.stringify(relevantMonthData.map((d) => ({ date: d.date, dietas: d.dietasCount }))),
+    [relevantMonthData]
+  );
+
+  const pernoctaDepString = React.useMemo(
+    () => JSON.stringify(relevantMonthData.map((d) => ({ date: d.date, pernocta: d.isPernocta }))),
+    [relevantMonthData]
+  );
+
+  const vacationDepString = React.useMemo(
+    () =>
+      JSON.stringify(relevantMonthData.map((d) => ({ date: d.date, vacation: d.vacationType }))),
+    [relevantMonthData]
+  );
+
   // Get monthly summary for displayed month
   const monthlyHours = React.useMemo(
     () => getMonthlyHours(displayedYear, displayedMonthIndex),
-    [getMonthlyHours, displayedYear, displayedMonthIndex]
+    [getMonthlyHours, displayedYear, displayedMonthIndex, hoursDepString]
   );
 
   const monthlyEarnings = React.useMemo(
     () => getMonthlyEarnings(displayedYear, displayedMonthIndex),
-    [getMonthlyEarnings, displayedYear, displayedMonthIndex]
+    [getMonthlyEarnings, displayedYear, displayedMonthIndex, earningsDepString]
   );
 
   const monthlyDietas = React.useMemo(
     () => getMonthlyDietas(displayedYear, displayedMonthIndex),
-    [getMonthlyDietas, displayedYear, displayedMonthIndex]
+    [getMonthlyDietas, displayedYear, displayedMonthIndex, dietasDepString]
   );
 
   const monthlyPernocta = React.useMemo(
     () => getMonthlyPernocta(displayedYear, displayedMonthIndex),
-    [getMonthlyPernocta, displayedYear, displayedMonthIndex]
+    [getMonthlyPernocta, displayedYear, displayedMonthIndex, pernoctaDepString]
   );
 
   const monthlyVacations = React.useMemo(
     () => getMonthlyVacationStats(displayedYear, displayedMonthIndex),
-    [getMonthlyVacationStats, displayedYear, displayedMonthIndex]
+    [getMonthlyVacationStats, displayedYear, displayedMonthIndex, vacationDepString]
   );
 
   const minimumExpectedIncome = React.useMemo(
